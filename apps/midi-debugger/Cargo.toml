@@ -1,0 +1,9 @@
+[package]
+name = "midi-debugger"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+midir = "0.10.1"
+ctrlc = "3.2.2"
+launchkey-sdk = { path = "../../launchkey-sdk" }

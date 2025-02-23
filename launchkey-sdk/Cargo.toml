@@ -1,0 +1,10 @@
+[package]
+name = "launchkey-sdk"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path  = "src/lib.rs"
+
+[dependencies]
+midir = "0.10.1"
