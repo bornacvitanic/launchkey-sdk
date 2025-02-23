@@ -30,17 +30,20 @@ fn main() {
 
     println!("Connecting to port: {}", ports[port_index].1);
 
-    // Set up MIDI output and enable DAW mode
+    // Set up LaunchkeyManager with default configuration
     let mut launchkey_manager = match LaunchkeyManager::default() {
-        Ok(cleanup) => cleanup,
+        Ok(manager) => manager,
         Err(err) => {
-            println!("Error setting up Launchkey Manager: {}", err);
+            println!("Error setting up LaunchkeyManager: {}", err);
             return;
         }
     };
 
     // Set up DAW mode
-    launchkey_manager.setup_daw_mode().expect("Failed to set up DAW mode.");
+    if let Err(err) = launchkey_manager.setup_daw_mode() {
+        println!("Error setting up DAW mode: {}", err);
+        return;
+    }
 
     // Set up a channel for communication between threads
     let (tx, rx) = mpsc::channel();

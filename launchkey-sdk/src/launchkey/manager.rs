@@ -14,7 +14,8 @@ impl LaunchkeyManager {
         Ok(Self { conn_out })
     }
 
-    pub fn default() -> Result<LaunchkeyManager, String> {
+    /// Provides a default LaunchkeyManager instance.
+    pub fn default() -> Result<Self, String> {
         // Create MIDI output instance
         let midi_out = MidiOutput::new("Custom DAW")
             .map_err(|_| "Failed to create MIDI output".to_string())?;
@@ -35,7 +36,7 @@ impl LaunchkeyManager {
             })
             .ok_or_else(|| "Could not find MIDIOUT2 port".to_string())?;
 
-        LaunchkeyManager::new(midi_out, out_port)
+        Self::new(midi_out, out_port)
     }
 
     /// Sends a MIDI command to the Launchkey.
@@ -45,6 +46,7 @@ impl LaunchkeyManager {
         Ok(())
     }
 
+    /// Sets up DAW mode on the Launchkey.
     pub fn setup_daw_mode(&mut self) -> Result<(), midir::SendError> {
         self.send_command(LaunchKeyCommand::EnableDAWMode)?;
         self.send_command(LaunchKeyCommand::SetPadMode(PadMode::DAW))?;
@@ -54,8 +56,8 @@ impl LaunchkeyManager {
         Ok(())
     }
 
+    /// Disables DAW mode on the Launchkey.
     pub fn disable_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        println!("Exiting and disabling DAW mode...");
         self.send_command(LaunchKeyCommand::DisableDAWMode)
     }
 }
