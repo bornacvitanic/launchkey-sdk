@@ -1,7 +1,5 @@
 use ctrlc;
-use launchkey_sdk::launchkey::commands::{
-    Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand,
-};
+use launchkey_sdk::launchkey::commands::{Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand, DAWPad, Pad};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -48,19 +46,21 @@ fn main() {
         return;
     }
 
-    // Set a pad's LED to green
-    launchkey_manager
-        .send_command(LaunchKeyCommand::SetPadColor {
-            pad_id: 0x60,
-            mode: LEDMode::Stationary,
-            color: Color::HighGreen,
-        })
-        .unwrap();
+    // Set a pads LED to green
+    for index in DAWPad::all() {
+        launchkey_manager
+            .send_command(LaunchKeyCommand::SetPadColor {
+                pad: Pad::DAW(index),
+                mode: LEDMode::Stationary,
+                color: Color::HighGreen,
+            })
+            .unwrap();
+    }
 
     // Set a pad's LED to custom RGB color
     launchkey_manager
         .send_command(LaunchKeyCommand::SetPadCustomColor {
-            pad_id: 0x61,
+            pad: Pad::DAW(DAWPad::PlugIn),
             r: 127,
             g: 64,
             b: 32,

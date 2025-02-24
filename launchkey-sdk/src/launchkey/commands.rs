@@ -1,3 +1,6 @@
+use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
+
 const ENABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x7F];
 const DISABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x00];
 const SYSEX_TERMINATOR: u8 = 0xF7;
@@ -9,12 +12,12 @@ pub enum LaunchKeyCommand {
     SetEncoderMode(EncoderMode),
     SetFaderMode(FaderMode),
     SetPadColor {
-        pad_id: u8,
+        pad: Pad,
         mode: LEDMode,
         color: Color,
     },
     SetPadCustomColor {
-        pad_id: u8,
+        pad: Pad,
         r: u8,
         g: u8,
         b: u8,
@@ -45,7 +48,7 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
             // New commands for pad LEDs
             LaunchKeyCommand::SetPadColor {
-                pad_id,
+                pad: pad,
                 mode,
                 color,
             } => {
@@ -54,11 +57,11 @@ impl LaunchKeyCommand {
                     LEDMode::Flashing => 0x91,
                     LEDMode::Pulsing => 0x92,
                 };
-                vec![channel, *pad_id, (*color) as u8]
+                vec![channel, (*pad).to_u8(), (*color) as u8]
             }
-            LaunchKeyCommand::SetPadCustomColor { pad_id, r, g, b } => {
+            LaunchKeyCommand::SetPadCustomColor { pad: pad, r, g, b } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x01, 0x43, *pad_id, *r, *g, *b]);
+                data.extend_from_slice(&[0x01, 0x43, (*pad).to_u8(), *r, *g, *b]);
                 data.push(SYSEX_TERMINATOR);
                 data
             }
@@ -129,6 +132,96 @@ pub enum Color {
     LowGreen = 0x17,
     MediumGreen = 0x16,
     HighGreen = 0x15,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
+pub enum DAWPad {
+    PlugIn = 0x60,
+    Mixer = 0x61,
+    Sends = 0x62,
+    Transport = 0x63,
+    EncoderCustom1 = 0x64,
+    EncoderCustom2 = 0x65,
+    EncoderCustom3 = 0x66,
+    EncoderCustom4 = 0x67,
+    DAW = 0x70,
+    Drum = 0x71,
+    UserChord = 0x72,
+    ChordMap = 0x73,
+    PadCustom1 = 0x74,
+    PadCustom2 = 0x75,
+    PadCustom3 = 0x76,
+    PadCustom4 = 0x77,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
+pub enum DrumPad {
+    PlugIn = 0x28,
+    Mixer = 0x29,
+    Sends = 0x2A,
+    Transport = 0x2B,
+    EncoderCustom1 = 0x30,
+    EncoderCustom2 = 0x31,
+    EncoderCustom3 = 0x32,
+    EncoderCustom4 = 0x33,
+    DAW = 0x24,
+    Drum = 0x25,
+    UserChord = 0x26,
+    ChordMap = 0x27,
+    PadCustom1 = 0x2C,
+    PadCustom2 = 0x2D,
+    PadCustom3 = 0x2E,
+    PadCustom4 = 0x7F,
+}
+
+/// This enum ensures a `Pad` is explicitly either from DAW mode or Drum mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pad {
+    DAW(DAWPad),
+    Drum(DrumPad),
+}
+
+impl Pad {
+    fn to_u8(self) -> u8 {
+        match self {
+            Pad::DAW(pad) => pad as u8,
+            Pad::Drum(pad) => pad as u8,
+        }
+    }
+}
+
+impl DAWPad {
+    /// Get all possible variants of `DAWPad`.
+    pub fn all() -> impl Iterator<Item = Self> {
+        Self::iter()
+    }
+
+    /// Get the count of all variants.
+    pub fn count() -> usize {
+        Self::all().count()
+    }
+
+    /// Safely get a variant by its index.
+    pub fn from_index(index: usize) -> Option<Self> {
+        Self::all().nth(index)
+    }
+}
+
+impl DrumPad {
+    /// Get all possible variants of `DrumPad`.
+    pub fn all() -> impl Iterator<Item = Self> {
+        Self::iter()
+    }
+
+    /// Get the count of all variants.
+    pub fn count() -> usize {
+        Self::all().count()
+    }
+
+    /// Safely get a variant by its index.
+    pub fn from_index(index: usize) -> Option<Self> {
+        Self::all().nth(index)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
