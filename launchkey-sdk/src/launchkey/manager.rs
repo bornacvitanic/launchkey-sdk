@@ -5,6 +5,7 @@ use std::fmt::Write;
 pub struct LaunchkeyManager {
     conn_out: midir::MidiOutputConnection,
     sku: LaunchKeySku,
+    in_daw_drum_mode: bool,
 }
 
 impl LaunchkeyManager {
@@ -17,7 +18,11 @@ impl LaunchkeyManager {
         let conn_out = midi_out
             .connect(port, "launchkey-manager")
             .map_err(|_| "Failed to connect to MIDI output".to_string())?;
-        Ok(Self { conn_out, sku })
+        Ok(Self {
+            conn_out,
+            sku,
+            in_daw_drum_mode: false,
+        })
     }
 
     /// Provides a default LaunchkeyManager instance.
@@ -71,6 +76,24 @@ impl LaunchkeyManager {
     /// Disables DAW mode on the Launchkey.
     pub fn disable_daw_mode(&mut self) -> Result<(), midir::SendError> {
         self.send_command(LaunchKeyCommand::DisableDAWMode)
+    }
+
+    /// Switch the Launchkey to DAW Drum Mode
+    pub fn enable_daw_drum_mode(&mut self) -> Result<(), midir::SendError> {
+        let message = [0xB6, 0x54, 0x01]; // Channel 7, CC 84, Value 1
+        self.conn_out.send(&message)?;
+        self.in_daw_drum_mode = true;
+        println!("Enabled DAW Drum Mode");
+        Ok(())
+    }
+
+    /// Switch the Launchkey back to Standalone Drum Mode
+    pub fn disable_daw_drum_mode(&mut self) -> Result<(), midir::SendError> {
+        let message = [0xB6, 0x54, 0x00]; // Channel 7, CC 84, Value 0
+        self.conn_out.send(&message)?;
+        self.in_daw_drum_mode = false;
+        println!("Disabled DAW Drum Mode (returned to Standalone)");
+        Ok(())
     }
 }
 

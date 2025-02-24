@@ -1,5 +1,7 @@
 use ctrlc;
-use launchkey_sdk::launchkey::commands::{Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand, DAWPad, Pad};
+use launchkey_sdk::launchkey::commands::{
+    Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand, Pad, PadInMode,
+};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -47,10 +49,10 @@ fn main() {
     }
 
     // Set a pads LED to green
-    for index in DAWPad::all() {
+    for index in Pad::all() {
         launchkey_manager
             .send_command(LaunchKeyCommand::SetPadColor {
-                pad: Pad::DAW(index),
+                pad_in_mode: PadInMode::DAW(index),
                 mode: LEDMode::Stationary,
                 color: Color::HighGreen,
             })
@@ -60,10 +62,22 @@ fn main() {
     // Set a pad's LED to custom RGB color
     launchkey_manager
         .send_command(LaunchKeyCommand::SetPadCustomColor {
-            pad: Pad::DAW(DAWPad::PlugIn),
+            pad_in_mode: PadInMode::DAW(Pad::PlugIn),
             r: 127,
             g: 64,
             b: 32,
+        })
+        .unwrap();
+
+    // Enable DAW Drum Mode
+    launchkey_manager.enable_daw_drum_mode().unwrap();
+
+    // Set a pad to HighGreen in DAW Drum Mode
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SetPadColor {
+            pad_in_mode: PadInMode::Drum(Pad::Mixer),
+            mode: LEDMode::Stationary,
+            color: Color::HighRed,
         })
         .unwrap();
 

@@ -1,5 +1,5 @@
-use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 const ENABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x7F];
 const DISABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x00];
@@ -12,12 +12,12 @@ pub enum LaunchKeyCommand {
     SetEncoderMode(EncoderMode),
     SetFaderMode(FaderMode),
     SetPadColor {
-        pad: Pad,
+        pad_in_mode: PadInMode,
         mode: LEDMode,
         color: Color,
     },
     SetPadCustomColor {
-        pad: Pad,
+        pad_in_mode: PadInMode,
         r: u8,
         g: u8,
         b: u8,
@@ -48,20 +48,21 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
             // New commands for pad LEDs
             LaunchKeyCommand::SetPadColor {
-                pad,
+                pad_in_mode,
                 mode,
                 color,
             } => {
-                let channel = match mode {
-                    LEDMode::Stationary => 0x90,
-                    LEDMode::Flashing => 0x91,
-                    LEDMode::Pulsing => 0x92,
-                };
-                vec![channel, (*pad).to_u8(), (*color) as u8]
+                let channel = mode.to_midi_channel(*pad_in_mode);
+                vec![channel, (*pad_in_mode).to_index(), (*color) as u8]
             }
-            LaunchKeyCommand::SetPadCustomColor { pad, r, g, b } => {
+            LaunchKeyCommand::SetPadCustomColor {
+                pad_in_mode,
+                r,
+                g,
+                b,
+            } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x01, 0x43, (*pad).to_u8(), *r, *g, *b]);
+                data.extend_from_slice(&[0x01, 0x43, (*pad_in_mode).to_index(), *r, *g, *b]);
                 data.push(SYSEX_TERMINATOR);
                 data
             }
@@ -120,6 +121,20 @@ pub enum LEDMode {
     Pulsing,
 }
 
+impl LEDMode {
+    fn to_midi_channel(self, pad_in_mode: PadInMode) -> u8 {
+        let base_channel = match self {
+            LEDMode::Stationary => 0x90, // Channel 1
+            LEDMode::Flashing => 0x91,   // Channel 2
+            LEDMode::Pulsing => 0x92,    // Channel 3
+        };
+        match pad_in_mode {
+            PadInMode::DAW(_) => base_channel, // DAW Pads always use default channels
+            PadInMode::Drum(_) => base_channel + 9, // Offset for Drum pads in DAW mode
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
     Off = 0x00,
@@ -135,63 +150,82 @@ pub enum Color {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
-pub enum DAWPad {
-    PlugIn = 0x60,
-    Mixer = 0x61,
-    Sends = 0x62,
-    Transport = 0x63,
-    EncoderCustom1 = 0x64,
-    EncoderCustom2 = 0x65,
-    EncoderCustom3 = 0x66,
-    EncoderCustom4 = 0x67,
-    DAW = 0x70,
-    Drum = 0x71,
-    UserChord = 0x72,
-    ChordMap = 0x73,
-    PadCustom1 = 0x74,
-    PadCustom2 = 0x75,
-    PadCustom3 = 0x76,
-    PadCustom4 = 0x77,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
-pub enum DrumPad {
-    PlugIn = 0x28,
-    Mixer = 0x29,
-    Sends = 0x2A,
-    Transport = 0x2B,
-    EncoderCustom1 = 0x30,
-    EncoderCustom2 = 0x31,
-    EncoderCustom3 = 0x32,
-    EncoderCustom4 = 0x33,
-    DAW = 0x24,
-    Drum = 0x25,
-    UserChord = 0x26,
-    ChordMap = 0x27,
-    PadCustom1 = 0x2C,
-    PadCustom2 = 0x2D,
-    PadCustom3 = 0x2E,
-    PadCustom4 = 0x7F,
-}
-
-/// This enum ensures a `Pad` is explicitly either from DAW mode or Drum mode.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pad {
-    DAW(DAWPad),
-    //Drum(DrumPad), // Doesn't work yet
+    PlugIn,
+    Mixer,
+    Sends,
+    Transport,
+    EncoderCustom1,
+    EncoderCustom2,
+    EncoderCustom3,
+    EncoderCustom4,
+    DAW,
+    Drum,
+    UserChord,
+    ChordMap,
+    PadCustom1,
+    PadCustom2,
+    PadCustom3,
+    PadCustom4,
 }
 
 impl Pad {
-    fn to_u8(self) -> u8 {
+    /// Get the MIDI index for the pad in DAW Mode
+    pub fn to_daw_index(self) -> u8 {
         match self {
-            Pad::DAW(pad) => pad as u8,
-            //Pad::Drum(pad) => pad as u8,
+            Pad::PlugIn => 0x60,
+            Pad::Mixer => 0x61,
+            Pad::Sends => 0x62,
+            Pad::Transport => 0x63,
+            Pad::EncoderCustom1 => 0x64,
+            Pad::EncoderCustom2 => 0x65,
+            Pad::EncoderCustom3 => 0x66,
+            Pad::EncoderCustom4 => 0x67,
+            Pad::DAW => 0x70,
+            Pad::Drum => 0x71,
+            Pad::UserChord => 0x72,
+            Pad::ChordMap => 0x73,
+            Pad::PadCustom1 => 0x74,
+            Pad::PadCustom2 => 0x75,
+            Pad::PadCustom3 => 0x76,
+            Pad::PadCustom4 => 0x77,
+        }
+    }
+
+    /// Get the MIDI index for the pad in Drum Mode
+    pub fn to_drum_index(self) -> u8 {
+        match self {
+            Pad::PlugIn => 0x28,
+            Pad::Mixer => 0x29,
+            Pad::Sends => 0x2A,
+            Pad::Transport => 0x2B,
+            Pad::EncoderCustom1 => 0x30,
+            Pad::EncoderCustom2 => 0x31,
+            Pad::EncoderCustom3 => 0x32,
+            Pad::EncoderCustom4 => 0x33,
+            Pad::DAW => 0x24,
+            Pad::Drum => 0x25,
+            Pad::UserChord => 0x26,
+            Pad::ChordMap => 0x27,
+            Pad::PadCustom1 => 0x2C,
+            Pad::PadCustom2 => 0x2D,
+            Pad::PadCustom3 => 0x2E,
+            Pad::PadCustom4 => 0x7F,
+        }
+    }
+
+    /// Get the correct MIDI index based on whether the pad is in DAW or Drum mode
+    pub fn to_index(self, is_drum: bool) -> u8 {
+        if is_drum {
+            self.to_drum_index()
+        } else {
+            self.to_daw_index()
         }
     }
 }
 
-impl DAWPad {
-    /// Get all possible variants of `DAWPad`.
+impl Pad {
+    /// Get all possible variants of `Pad`.
     pub fn all() -> impl Iterator<Item = Self> {
         Self::iter()
     }
@@ -207,20 +241,20 @@ impl DAWPad {
     }
 }
 
-impl DrumPad {
-    /// Get all possible variants of `DrumPad`.
-    pub fn all() -> impl Iterator<Item = Self> {
-        Self::iter()
-    }
+/// This enum ensures a Pad is explicitly either from DAW mode or Drum mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PadInMode {
+    DAW(Pad),
+    Drum(Pad),
+}
 
-    /// Get the count of all variants.
-    pub fn count() -> usize {
-        Self::all().count()
-    }
-
-    /// Safely get a variant by its index.
-    pub fn from_index(index: usize) -> Option<Self> {
-        Self::all().nth(index)
+impl PadInMode {
+    /// Get the correct MIDI index based on whether it's in DAW or Drum mode
+    pub fn to_index(self) -> u8 {
+        match self {
+            PadInMode::DAW(pad) => pad.to_daw_index(),
+            PadInMode::Drum(pad) => pad.to_drum_index(),
+        }
     }
 }
 
@@ -284,7 +318,7 @@ pub enum PadMode {
     Custom3,
     Custom4,
     ArpPattern,
-    ChordMap
+    ChordMap,
 }
 
 impl PadMode {
