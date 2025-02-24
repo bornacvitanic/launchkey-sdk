@@ -1,17 +1,23 @@
+use crate::launchkey::commands::{EncoderMode, FaderMode, LaunchKeyCommand, LaunchKeySku, PadMode};
 use midir::{MidiOutput, MidiOutputPort};
-use crate::launchkey::commands::{EncoderMode, FaderMode, LaunchKeyCommand, PadMode};
+use std::fmt::Write;
 
 pub struct LaunchkeyManager {
     conn_out: midir::MidiOutputConnection,
+    sku: LaunchKeySku,
 }
 
 impl LaunchkeyManager {
     /// Creates a new LaunchkeyManager and connects to the specified output port.
-    pub fn new(midi_out: MidiOutput, port: &MidiOutputPort) -> Result<Self, String> {
+    pub fn new(
+        midi_out: MidiOutput,
+        port: &MidiOutputPort,
+        sku: LaunchKeySku,
+    ) -> Result<Self, String> {
         let conn_out = midi_out
             .connect(port, "launchkey-manager")
             .map_err(|_| "Failed to connect to MIDI output".to_string())?;
-        Ok(Self { conn_out })
+        Ok(Self { conn_out, sku })
     }
 
     /// Provides a default LaunchkeyManager instance.
@@ -36,12 +42,18 @@ impl LaunchkeyManager {
             })
             .ok_or_else(|| "Could not find MIDIOUT2 port".to_string())?;
 
-        Self::new(midi_out, out_port)
+        Self::new(midi_out, out_port, LaunchKeySku::Mini)
     }
 
     /// Sends a MIDI command to the Launchkey.
     pub fn send_command(&mut self, command: LaunchKeyCommand) -> Result<(), midir::SendError> {
-        let bytes = command.as_bytes();
+        let bytes = command.as_bytes(&self.sku);
+        // Print the bytes in hexadecimal format
+        let mut hex_string = String::new();
+        for byte in &bytes {
+            let _ = &hex_string.write_str(&format!("{:02X} ", byte));
+        }
+        println!("Sending MIDI message: {}", hex_string.trim_end());
         self.conn_out.send(&bytes)?;
         Ok(())
     }

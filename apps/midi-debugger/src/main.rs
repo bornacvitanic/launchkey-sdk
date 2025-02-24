@@ -1,4 +1,7 @@
 use ctrlc;
+use launchkey_sdk::launchkey::commands::{
+    Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand,
+};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -44,6 +47,70 @@ fn main() {
         println!("Error setting up DAW mode: {}", err);
         return;
     }
+
+    // Set a pad's LED to green
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SetPadColor {
+            pad_id: 0x60,
+            mode: LEDMode::Stationary,
+            color: Color::HighGreen,
+        })
+        .unwrap();
+
+    // Set a pad's LED to custom RGB color
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SetPadCustomColor {
+            pad_id: 0x61,
+            r: 127,
+            g: 64,
+            b: 32,
+        })
+        .unwrap();
+
+    // Configure and set text on the screen
+    launchkey_manager
+        .send_command(LaunchKeyCommand::ConfigureDisplay {
+            target: DisplayTarget::Stationary,
+            config: DisplayConfig::Arrangement(1),
+        })
+        .unwrap();
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SetScreenText {
+            target: DisplayTarget::Stationary,
+            field: 0,
+            text: "Custom DAW".to_string(),
+        })
+        .unwrap();
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SetScreenText {
+            target: DisplayTarget::Stationary,
+            field: 1,
+            text: "Hello, World!".to_string(),
+        })
+        .unwrap();
+    launchkey_manager
+        .send_command(LaunchKeyCommand::ConfigureDisplay {
+            target: DisplayTarget::Stationary,
+            config: DisplayConfig::Trigger,
+        })
+        .unwrap();
+
+    // Send a bitmap to the screen
+    let mut bitmap_data = [0u8; 1216];
+    bitmap_data = bitmap_data.map(|_e| 0x12);
+    // Populate the bitmap_data array with your custom bitmap
+    launchkey_manager
+        .send_command(LaunchKeyCommand::SendScreenBitmap {
+            target: DisplayTarget::GlobalTemporary,
+            bitmap_data,
+        })
+        .unwrap();
+    launchkey_manager
+        .send_command(LaunchKeyCommand::ConfigureDisplay {
+            target: DisplayTarget::Stationary,
+            config: DisplayConfig::Trigger,
+        })
+        .unwrap();
 
     // Set up a channel for communication between threads
     let (tx, rx) = mpsc::channel();
@@ -101,6 +168,26 @@ fn handle_midi_event(event: MidiEvent) {
         }
         MidiEvent::NoteOff { note } => {
             println!("Note Off: {}", note);
+        }
+        MidiEvent::ControlChange { controller, value } => {
+            println!("Control Change: Controller {} Value {}", controller, value);
+        }
+        MidiEvent::ProgramChange { program } => {
+            println!("Program Change: Program {}", program);
+        }
+        MidiEvent::SysEx { data } => {
+            // Print SysEx data in hexadecimal format
+            let hex_data: String = data
+                .iter()
+                .map(|byte| format!("{:02X}", byte))
+                .collect::<Vec<String>>()
+                .join(" ");
+            println!("SysEx Message: {}", hex_data);
+
+            // Example: Handle specific SysEx responses
+            if data.starts_with(&[0x00, 0x20, 0x29, 0x02, 0x13, 0x09, 0x7F]) {
+                println!("Launchkey acknowledged bitmap reception.");
+            }
         }
     }
 }
