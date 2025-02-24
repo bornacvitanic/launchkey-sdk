@@ -48,7 +48,7 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
             // New commands for pad LEDs
             LaunchKeyCommand::SetPadColor {
-                pad: pad,
+                pad,
                 mode,
                 color,
             } => {
@@ -59,7 +59,7 @@ impl LaunchKeyCommand {
                 };
                 vec![channel, (*pad).to_u8(), (*color) as u8]
             }
-            LaunchKeyCommand::SetPadCustomColor { pad: pad, r, g, b } => {
+            LaunchKeyCommand::SetPadCustomColor { pad, r, g, b } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[0x01, 0x43, (*pad).to_u8(), *r, *g, *b]);
                 data.push(SYSEX_TERMINATOR);
@@ -178,14 +178,14 @@ pub enum DrumPad {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pad {
     DAW(DAWPad),
-    Drum(DrumPad),
+    //Drum(DrumPad), // Doesn't work yet
 }
 
 impl Pad {
     fn to_u8(self) -> u8 {
         match self {
             Pad::DAW(pad) => pad as u8,
-            Pad::Drum(pad) => pad as u8,
+            //Pad::Drum(pad) => pad as u8,
         }
     }
 }
@@ -279,7 +279,12 @@ pub enum PadMode {
     Drum,
     DAW,
     UserChords,
-    Custom(u8),
+    Custom1,
+    Custom2,
+    Custom3,
+    Custom4,
+    ArpPattern,
+    ChordMap
 }
 
 impl PadMode {
@@ -288,7 +293,12 @@ impl PadMode {
             PadMode::Drum => 0x01,
             PadMode::DAW => 0x02,
             PadMode::UserChords => 0x04,
-            PadMode::Custom(value) => *value,
+            PadMode::Custom1 => 0x05,
+            PadMode::Custom2 => 0x06,
+            PadMode::Custom3 => 0x07,
+            PadMode::Custom4 => 0x08,
+            PadMode::ArpPattern => 0x0D,
+            PadMode::ChordMap => 0x0E,
         };
         vec![0xB6, 0x1D, value]
     }
@@ -300,7 +310,10 @@ pub enum EncoderMode {
     Mixer,
     Sends,
     Transport,
-    Custom(u8),
+    Custom1,
+    Custom2,
+    Custom3,
+    Custom4,
 }
 
 impl EncoderMode {
@@ -310,7 +323,10 @@ impl EncoderMode {
             EncoderMode::Mixer => 0x01,
             EncoderMode::Sends => 0x04,
             EncoderMode::Transport => 0x05,
-            EncoderMode::Custom(value) => *value,
+            EncoderMode::Custom1 => 0x06,
+            EncoderMode::Custom2 => 0x07,
+            EncoderMode::Custom3 => 0x08,
+            EncoderMode::Custom4 => 0x09,
         };
         vec![0xB6, 0x1E, value]
     }
@@ -319,14 +335,20 @@ impl EncoderMode {
 #[derive(Debug)]
 pub enum FaderMode {
     Volume,
-    Custom(u8),
+    Custom1,
+    Custom2,
+    Custom3,
+    Custom4,
 }
 
 impl FaderMode {
     pub fn as_bytes(&self) -> Vec<u8> {
         let value = match self {
             FaderMode::Volume => 0x01,
-            FaderMode::Custom(value) => *value,
+            FaderMode::Custom1 => 0x06,
+            FaderMode::Custom2 => 0x07,
+            FaderMode::Custom3 => 0x08,
+            FaderMode::Custom4 => 0x09,
         };
         vec![0xB6, 0x1F, value]
     }
