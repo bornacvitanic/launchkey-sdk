@@ -1,7 +1,5 @@
 use ctrlc;
-use launchkey_sdk::launchkey::commands::{
-    Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand, Pad, PadInMode,
-};
+use launchkey_sdk::launchkey::commands::{Color, DisplayConfig, DisplayTarget, LEDMode, LaunchKeyCommand, Pad, PadInMode, LaunchKeyButton, MiniButton, Brightness};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -47,6 +45,12 @@ fn main() {
         println!("Error setting up DAW mode: {}", err);
         return;
     }
+
+    // Set Play Button brightness
+    launchkey_manager.send_command(LaunchKeyCommand::SetButtonBrightness {
+        launch_key_button: LaunchKeyButton::Mini(MiniButton::Play),
+        brightness: Brightness::max(),
+    }).unwrap();
 
     // Set a pads LED to green
     for index in Pad::all() {

@@ -11,6 +11,10 @@ pub enum LaunchKeyCommand {
     SetPadMode(PadMode),
     SetEncoderMode(EncoderMode),
     SetFaderMode(FaderMode),
+    SetButtonBrightness {
+        launch_key_button: LaunchKeyButton,
+        brightness: Brightness,
+    },
     SetPadColor {
         pad_in_mode: PadInMode,
         mode: LEDMode,
@@ -46,7 +50,10 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetPadMode(mode) => mode.as_bytes(),
             LaunchKeyCommand::SetEncoderMode(mode) => mode.as_bytes(),
             LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
-            // New commands for pad LEDs
+            LaunchKeyCommand::SetButtonBrightness { launch_key_button, brightness } => {
+                vec![0xB3, (*launch_key_button).to_index(), brightness.value()]
+            },
+            // Commands for pad LEDs
             LaunchKeyCommand::SetPadColor {
                 pad_in_mode,
                 mode,
@@ -67,7 +74,7 @@ impl LaunchKeyCommand {
                 data
             }
 
-            // New commands for screen control
+            // Commands for screen control
             LaunchKeyCommand::ConfigureDisplay { target, config } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[0x04, (*target).into(), (*config).into()]);
@@ -110,6 +117,101 @@ impl LaunchKeySku {
         match self {
             LaunchKeySku::Regular => [0xF0, 0x00, 0x20, 0x29, 0x02, 0x14],
             LaunchKeySku::Mini => [0xF0, 0x00, 0x20, 0x29, 0x02, 0x13],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RegularButton {
+    Shift = 0x3F,
+    PreviousTrack = 0x67,
+    NextTrack = 0x66,
+    EncoderMoveUp = 0x33,
+    EncoderMoveDown = 0x34,
+    PadBankUp = 0x6A,
+    PadBankDown = 0x6B,
+    SceneLaunch = 0x68,
+    Function = 0x69,
+    CaptureMIDI = 0x4A,
+    UndoRedo = 0x4D,
+    Quantise = 0x4B,
+    Metronome = 0x4C,
+    Stop = 0x74,
+    Loop = 0x76,
+    Play = 0x73,
+    Record = 0x75,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MiniButton {
+    Shift = 0x3F,
+    Play = 0x73,
+    Record = 0x75,
+    EncoderMoveUp = 0x33,
+    EncoderMoveDown = 0x34,
+    PadBankUp = 0x6A,
+    PadBankDown = 0x6B,
+    SceneLaunch = 0x68,
+    Function = 0x69,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LaunchKeyButton {
+    Regular(RegularButton),
+    Mini(MiniButton),
+}
+
+impl LaunchKeyButton {
+    /// Get the correct button index based on whether it's a Regular or Mini Launchkey
+    pub fn to_index(self) -> u8 {
+        match self {
+            LaunchKeyButton::Regular(regular_button) => regular_button as u8,
+            LaunchKeyButton::Mini(mini_button) => mini_button as u8,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Brightness(u8);
+
+impl Brightness {
+    pub const MIN: u8 = 0x00;
+    pub const MAX: u8 = 0x7F;
+
+    /// Tries to create a new `Brightness`, returning `None` if out of range.
+    pub fn new(value: u8) -> Option<Self> {
+        if value <= Self::MAX {
+            Some(Self(value))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the minimum brightness (off).
+    pub fn min() -> Self {
+        Self(Self::MIN)
+    }
+
+    /// Returns the maximum brightness (full brightness).
+    pub fn max() -> Self {
+        Self(Self::MAX)
+    }
+
+    /// Returns the inner `u8` value.
+    pub fn value(self) -> u8 {
+        self.0
+    }
+}
+
+impl TryFrom<u8> for Brightness {
+    type Error = &'static str;
+
+    /// Brightness must be in the range 0–127 (0x00–0x7F in HEX).
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        if value <= 127 {
+            Ok(Brightness(value))
+        } else {
+            Err("Brightness must be in the range 0–127 (0x00–0x7F in HEX).")
         }
     }
 }
