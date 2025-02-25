@@ -1,5 +1,8 @@
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use crate::launchkey::modes::pad_mode::PadMode;
+use crate::launchkey::modes::fader_mode::FaderMode;
+use crate::launchkey::modes::encoder_mode::EncoderMode;
 
 const ENABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x7F];
 const DISABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x00];
@@ -407,85 +410,5 @@ impl From<DisplayConfig> for u8 {
             DisplayConfig::Trigger => 0x7F,
             DisplayConfig::Arrangement(arrangement) => arrangement,
         }
-    }
-}
-
-#[derive(Debug)]
-pub enum PadMode {
-    Drum,
-    DAW,
-    UserChords,
-    Custom1,
-    Custom2,
-    Custom3,
-    Custom4,
-    ArpPattern,
-    ChordMap,
-}
-
-impl PadMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            PadMode::Drum => 0x01,
-            PadMode::DAW => 0x02,
-            PadMode::UserChords => 0x04,
-            PadMode::Custom1 => 0x05,
-            PadMode::Custom2 => 0x06,
-            PadMode::Custom3 => 0x07,
-            PadMode::Custom4 => 0x08,
-            PadMode::ArpPattern => 0x0D,
-            PadMode::ChordMap => 0x0E,
-        };
-        vec![0xB6, 0x1D, value]
-    }
-}
-
-#[derive(Debug)]
-pub enum EncoderMode {
-    Plugin,
-    Mixer,
-    Sends,
-    Transport,
-    Custom1,
-    Custom2,
-    Custom3,
-    Custom4,
-}
-
-impl EncoderMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            EncoderMode::Plugin => 0x02,
-            EncoderMode::Mixer => 0x01,
-            EncoderMode::Sends => 0x04,
-            EncoderMode::Transport => 0x05,
-            EncoderMode::Custom1 => 0x06,
-            EncoderMode::Custom2 => 0x07,
-            EncoderMode::Custom3 => 0x08,
-            EncoderMode::Custom4 => 0x09,
-        };
-        vec![0xB6, 0x1E, value]
-    }
-}
-
-#[derive(Debug)]
-pub enum FaderMode {
-    Volume,
-    Custom1,
-    Custom2,
-    Custom3,
-    Custom4,
-}
-
-impl FaderMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            FaderMode::Volume => 0x01,
-            FaderMode::Custom1 => 0x06,
-            FaderMode::Custom2 => 0x07,
-            FaderMode::Custom3 => 0x08,
-            FaderMode::Custom4 => 0x09,
-        };
-        vec![0xB6, 0x1F, value]
     }
 }

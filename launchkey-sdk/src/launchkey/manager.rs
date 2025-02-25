@@ -1,4 +1,7 @@
-use crate::launchkey::commands::{EncoderMode, FaderMode, LaunchKeyCommand, LaunchKeySku, PadMode};
+use crate::launchkey::commands::{LaunchKeyCommand, LaunchKeySku};
+use crate::launchkey::modes::pad_mode::PadMode;
+use crate::launchkey::modes::encoder_mode::EncoderMode;
+use crate::launchkey::modes::fader_mode::FaderMode;
 use midir::{MidiOutput, MidiOutputPort};
 use std::fmt::Write;
 
