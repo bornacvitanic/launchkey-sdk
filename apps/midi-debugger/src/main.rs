@@ -1,9 +1,9 @@
 use ctrlc;
-use launchkey_sdk::launchkey::commands::{
-    Brightness, Color, LEDMode, LaunchKeyButton, LaunchKeyCommand, MiniButton, Pad, PadInMode,
-};
-use launchkey_sdk::launchkey::display::{DisplayConfig, DisplayTarget};
+use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
+use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
+use launchkey_sdk::launchkey::surface::display::{DisplayConfig, DisplayTarget};
+use launchkey_sdk::launchkey::surface::pads::{Color, LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
 use midir::{Ignore, MidiInput};

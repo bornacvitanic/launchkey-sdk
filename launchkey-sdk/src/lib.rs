@@ -12,5 +12,9 @@ pub mod launchkey {
         pub mod pad_mode;
     }
     pub mod constants;
-    pub mod display;
+    pub mod surface {
+        pub mod buttons;
+        pub mod display;
+        pub mod pads;
+    }
 }
