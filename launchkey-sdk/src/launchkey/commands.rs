@@ -1,12 +1,13 @@
+use crate::launchkey::constants::{
+    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
+    SYSEX_TERMINATOR,
+};
+use crate::launchkey::display::{DisplayConfig, DisplayTarget};
+use crate::launchkey::modes::encoder_mode::EncoderMode;
+use crate::launchkey::modes::fader_mode::FaderMode;
+use crate::launchkey::modes::pad_mode::PadMode;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use crate::launchkey::modes::pad_mode::PadMode;
-use crate::launchkey::modes::fader_mode::FaderMode;
-use crate::launchkey::modes::encoder_mode::EncoderMode;
-
-const ENABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x7F];
-const DISABLE_DAW_MODE: [u8; 3] = [0x9F, 0x0C, 0x00];
-const SYSEX_TERMINATOR: u8 = 0xF7;
 
 pub enum LaunchKeyCommand {
     EnableDAWMode,
@@ -53,9 +54,16 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetPadMode(mode) => mode.as_bytes(),
             LaunchKeyCommand::SetEncoderMode(mode) => mode.as_bytes(),
             LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
-            LaunchKeyCommand::SetButtonBrightness { launch_key_button, brightness } => {
-                vec![0xB3, (*launch_key_button).to_index(), brightness.value()]
-            },
+            LaunchKeyCommand::SetButtonBrightness {
+                launch_key_button,
+                brightness,
+            } => {
+                vec![
+                    BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL,
+                    (*launch_key_button).to_index(),
+                    brightness.value(),
+                ]
+            }
             // Commands for pad LEDs
             LaunchKeyCommand::SetPadColor {
                 pad_in_mode,
@@ -105,21 +113,6 @@ impl LaunchKeyCommand {
                 data.push(SYSEX_TERMINATOR);
                 data
             }
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum LaunchKeySku {
-    Regular,
-    Mini,
-}
-
-impl LaunchKeySku {
-    pub fn sys_ex_header(&self) -> [u8; 6] {
-        match self {
-            LaunchKeySku::Regular => [0xF0, 0x00, 0x20, 0x29, 0x02, 0x14],
-            LaunchKeySku::Mini => [0xF0, 0x00, 0x20, 0x29, 0x02, 0x13],
         }
     }
 }
@@ -359,56 +352,6 @@ impl PadInMode {
         match self {
             PadInMode::DAW(pad) => pad.to_daw_index(),
             PadInMode::Drum(pad) => pad.to_drum_index(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-#[repr(u8)]
-pub enum DisplayTarget {
-    Temporary(u8), // 00h - 1Fh
-    Stationary,
-    GlobalTemporary,
-    DAWPadModeName,
-    DAWDrumPadModeName,
-    MixerEncoderModeName,
-    PluginEncoderModeName,
-    SendsEncoderModeName,
-    TransportEncoderModeName,
-    VolumeFaderModeName,
-}
-
-#[derive(Debug, Clone, Copy)]
-#[repr(u8)]
-pub enum DisplayConfig {
-    Cancel,
-    Trigger,
-    Arrangement(u8),
-}
-
-impl From<DisplayTarget> for u8 {
-    fn from(target: DisplayTarget) -> Self {
-        match target {
-            DisplayTarget::Temporary(idx) => idx,
-            DisplayTarget::Stationary => 0x20,
-            DisplayTarget::GlobalTemporary => 0x21,
-            DisplayTarget::DAWPadModeName => 0x22,
-            DisplayTarget::DAWDrumPadModeName => 0x23,
-            DisplayTarget::MixerEncoderModeName => 0x24,
-            DisplayTarget::PluginEncoderModeName => 0x25,
-            DisplayTarget::SendsEncoderModeName => 0x26,
-            DisplayTarget::TransportEncoderModeName => 0x27,
-            DisplayTarget::VolumeFaderModeName => 0x28,
-        }
-    }
-}
-
-impl From<DisplayConfig> for u8 {
-    fn from(config: DisplayConfig) -> Self {
-        match config {
-            DisplayConfig::Cancel => 0x00,
-            DisplayConfig::Trigger => 0x7F,
-            DisplayConfig::Arrangement(arrangement) => arrangement,
         }
     }
 }
