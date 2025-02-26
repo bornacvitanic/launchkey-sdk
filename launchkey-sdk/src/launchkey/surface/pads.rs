@@ -22,20 +22,6 @@ impl LEDMode {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Color {
-    Off = 0x00,
-    LowRed = 0x07,
-    MediumRed = 0x06,
-    HighRed = 0x05,
-    LowYellow = 0x0F,
-    MediumYellow = 0x0E,
-    HighYellow = 0x0D,
-    LowGreen = 0x17,
-    MediumGreen = 0x16,
-    HighGreen = 0x15,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum Pad {
     PlugIn,

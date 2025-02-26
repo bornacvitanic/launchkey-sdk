@@ -1,5 +1,6 @@
+use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{
-    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
+    BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE, LaunchKeySku,
     SYSEX_TERMINATOR,
 };
 use crate::launchkey::modes::encoder_mode::EncoderMode;
@@ -7,7 +8,7 @@ use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
 use crate::launchkey::surface::buttons::{Brightness, LaunchKeyButton};
 use crate::launchkey::surface::display::{DisplayConfig, DisplayTarget};
-use crate::launchkey::surface::pads::{Color, LEDMode, PadInMode};
+use crate::launchkey::surface::pads::{LEDMode, PadInMode};
 
 pub enum LaunchKeyCommand {
     EnableDAWMode,
@@ -22,13 +23,11 @@ pub enum LaunchKeyCommand {
     SetPadColor {
         pad_in_mode: PadInMode,
         mode: LEDMode,
-        color: Color,
+        color_palette_index: ColorPaletteIndex,
     },
     SetPadCustomColor {
         pad_in_mode: PadInMode,
-        r: u8,
-        g: u8,
-        b: u8,
+        color: Color,
     },
     ConfigureDisplay {
         target: DisplayTarget,
@@ -68,19 +67,17 @@ impl LaunchKeyCommand {
             LaunchKeyCommand::SetPadColor {
                 pad_in_mode,
                 mode,
-                color,
+                color_palette_index,
             } => {
                 let channel = mode.to_midi_channel(*pad_in_mode);
-                vec![channel, (*pad_in_mode).to_index(), (*color) as u8]
+                vec![channel, (*pad_in_mode).to_index(), color_palette_index.as_u8()]
             }
             LaunchKeyCommand::SetPadCustomColor {
                 pad_in_mode,
-                r,
-                g,
-                b,
+                color,
             } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x01, 0x43, (*pad_in_mode).to_index(), *r, *g, *b]);
+                data.extend_from_slice(&[0x01, 0x43, (*pad_in_mode).to_index(), color.r, color.g, color.b]);
                 data.push(SYSEX_TERMINATOR);
                 data
             }

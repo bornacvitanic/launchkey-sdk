@@ -17,4 +17,5 @@ pub mod launchkey {
         pub mod display;
         pub mod pads;
     }
+    pub mod colors;
 }
