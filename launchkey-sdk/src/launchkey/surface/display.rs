@@ -58,16 +58,31 @@ impl ModeNameTarget {
 #[repr(u8)]
 pub enum DisplayConfig {
     Cancel,
+    Arrangement(Arrangement),
     Trigger,
-    Arrangement(u8),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Arrangement {
+    NameValue,
+    TitleNameValue,
+    TitleEightNames,
+    NameNumericValue,
 }
 
 impl From<DisplayConfig> for u8 {
     fn from(config: DisplayConfig) -> Self {
         match config {
             DisplayConfig::Cancel => 0x00,
+            DisplayConfig::Arrangement(arrangement) => {
+                match arrangement {
+                    Arrangement::NameValue => 0x01,
+                    Arrangement::TitleNameValue => 0x02,
+                    Arrangement::TitleEightNames => 0x03,
+                    Arrangement::NameNumericValue => 0x04,
+                }
+            },
             DisplayConfig::Trigger => 0x7F,
-            DisplayConfig::Arrangement(arrangement) => arrangement,
         }
     }
 }
