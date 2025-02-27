@@ -2,7 +2,7 @@ use ctrlc;
 use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
-use launchkey_sdk::launchkey::surface::display::{DisplayConfig, DisplayTarget};
+use launchkey_sdk::launchkey::surface::display::{DisplayConfig, DisplayTarget, ModeNameTarget};
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -129,6 +129,17 @@ fn main() {
             .unwrap();
     }
 
+    // Customizing PAD mode names
+    for mode_name_target in ModeNameTarget::all() {
+        launchkey_manager
+            .send_command(LaunchKeyCommand::SetScreenText {
+                target: DisplayTarget::ModeName(mode_name_target),
+                field: 0,
+                text: format!("Custom {}", mode_name_target),
+            })
+            .unwrap();
+    }
+
     // Send a bitmap to the screen
     let mut bitmap_data = [0u8; 1216];
     bitmap_data = bitmap_data.map(|_e| 0x12);
@@ -137,12 +148,6 @@ fn main() {
         .send_command(LaunchKeyCommand::SendScreenBitmap {
             target: DisplayTarget::GlobalTemporary,
             bitmap_data,
-        })
-        .unwrap();
-    launchkey_manager
-        .send_command(LaunchKeyCommand::ConfigureDisplay {
-            target: DisplayTarget::Stationary,
-            config: DisplayConfig::Trigger,
         })
         .unwrap();
 
