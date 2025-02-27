@@ -12,6 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 use launchkey_sdk::launchkey::colors::CommonColor;
+use launchkey_sdk::launchkey::surface::encoders::Encoder;
 
 fn main() {
     let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
@@ -59,10 +60,10 @@ fn main() {
         .unwrap();
 
     // Set a pads LED to green
-    for index in Pad::all() {
+    for pad in Pad::all() {
         launchkey_manager
             .send_command(LaunchKeyCommand::SetPadColor {
-                pad_in_mode: PadInMode::DAW(index),
+                pad_in_mode: PadInMode::DAW(pad),
                 mode: LEDMode::Stationary,
                 color_palette_index: CommonColor::BrightGreen.to_palette_index(),
             })
@@ -116,6 +117,17 @@ fn main() {
             config: DisplayConfig::Trigger,
         })
         .unwrap();
+
+    // Customize names for all encoders
+    for (index, encoder) in Encoder::all().enumerate() {
+        launchkey_manager
+            .send_command(LaunchKeyCommand::SetScreenText {
+                target: DisplayTarget::Temporary(encoder.to_absolute_mode_index()),
+                field: 0,
+                text: format!("Custom Encoder {}", index + 1),
+            })
+            .unwrap();
+    }
 
     // Send a bitmap to the screen
     let mut bitmap_data = [0u8; 1216];
