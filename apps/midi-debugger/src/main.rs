@@ -1,8 +1,12 @@
 use ctrlc;
+use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
-use launchkey_sdk::launchkey::surface::display::{Arrangement, DisplayConfig, DisplayTarget, ModeNameTarget};
+use launchkey_sdk::launchkey::surface::display::{
+    Arrangement, DisplayConfig, DisplayTarget, ModeNameTarget,
+};
+use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -11,8 +15,6 @@ use std::io::{self, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
-use launchkey_sdk::launchkey::colors::CommonColor;
-use launchkey_sdk::launchkey::surface::encoders::Encoder;
 
 fn main() {
     let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
@@ -74,7 +76,7 @@ fn main() {
     launchkey_manager
         .send_command(LaunchKeyCommand::SetPadCustomColor {
             pad_in_mode: PadInMode::DAW(Pad::PlugIn),
-            color: CommonColor::BrightCyan.to_color()
+            color: CommonColor::BrightCyan.to_color(),
         })
         .unwrap();
 

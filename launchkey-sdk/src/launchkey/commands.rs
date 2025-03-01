@@ -1,6 +1,6 @@
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{
-    BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE, LaunchKeySku,
+    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
     SYSEX_TERMINATOR,
 };
 use crate::launchkey::modes::encoder_mode::EncoderMode;
@@ -70,14 +70,22 @@ impl LaunchKeyCommand {
                 color_palette_index,
             } => {
                 let channel = mode.to_midi_channel(*pad_in_mode);
-                vec![channel, (*pad_in_mode).to_index(), color_palette_index.as_u8()]
+                vec![
+                    channel,
+                    (*pad_in_mode).to_index(),
+                    color_palette_index.as_u8(),
+                ]
             }
-            LaunchKeyCommand::SetPadCustomColor {
-                pad_in_mode,
-                color,
-            } => {
+            LaunchKeyCommand::SetPadCustomColor { pad_in_mode, color } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x01, 0x43, (*pad_in_mode).to_index(), color.r, color.g, color.b]);
+                data.extend_from_slice(&[
+                    0x01,
+                    0x43,
+                    (*pad_in_mode).to_index(),
+                    color.r,
+                    color.g,
+                    color.b,
+                ]);
                 data.push(SYSEX_TERMINATOR);
                 data
             }

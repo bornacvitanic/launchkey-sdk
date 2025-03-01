@@ -12,7 +12,10 @@ impl ColorPaletteIndex {
         if value <= 127 {
             Ok(Self(value))
         } else {
-            Err(format!("Invalid color index: {}. Must be between 0 and 127.", value))
+            Err(format!(
+                "Invalid color index: {}. Must be between 0 and 127.",
+                value
+            ))
         }
     }
 
@@ -73,7 +76,8 @@ impl Color {
         let out_max = 127;
         let map_value = |value: u8| -> u8 {
             ((value as f32 - in_min as f32) / (in_max as f32 - in_min as f32)
-                * (out_max as f32 - out_min as f32) + out_min as f32) as u8
+                * (out_max as f32 - out_min as f32)
+                + out_min as f32) as u8
         };
 
         Self {

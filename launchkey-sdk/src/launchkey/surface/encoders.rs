@@ -52,11 +52,17 @@ impl Encoder {
     }
 
     /// Get all possible variants of `Encoder`.
-    pub fn all() -> impl Iterator<Item = Self> { Self::iter() }
+    pub fn all() -> impl Iterator<Item = Self> {
+        Self::iter()
+    }
 
     /// Get the count of all variants
-    pub fn count() -> usize { Self::all().count() }
+    pub fn count() -> usize {
+        Self::all().count()
+    }
 
     /// Safely get a variant by its index
-    pub fn from_index(index: usize) -> Option<Self> { Self::all().nth(index) }
+    pub fn from_index(index: usize) -> Option<Self> {
+        Self::all().nth(index)
+    }
 }
