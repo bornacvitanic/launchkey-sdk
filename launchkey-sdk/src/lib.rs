@@ -1,5 +1,6 @@
 pub mod midi {
     pub mod input;
+    pub mod to_hex;
 }
 
 pub mod launchkey {

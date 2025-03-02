@@ -1,8 +1,9 @@
 use midir::{MidiInput, MidiInputConnection};
 use std::sync::mpsc;
-use wmidi::{MidiMessage, U7};
+use wmidi::MidiMessage;
 use std::io;
 use std::io::Write;
+use crate::midi::to_hex::ToHexString;
 
 pub fn list_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
     midi_in
@@ -72,18 +73,5 @@ pub fn log_midi_message(message: MidiMessage) {
         MidiMessage::PitchBendChange(_, pitch_bend) => println!("Pitch Bend: {:?}", pitch_bend),
         MidiMessage::SysEx(data) => { println!("SysEx Message: {}", data.to_hex_string()); }
         _ => {}
-    }
-}
-
-pub trait ToHexString {
-    fn to_hex_string(&self) -> String;
-}
-
-impl ToHexString for &[U7] {
-    fn to_hex_string(&self) -> String {
-        self.iter()
-            .map(|byte| format!("{:02X}", u8::from(*byte)))  // Convert U7 to u8 and format as hex
-            .collect::<Vec<String>>()
-            .join(" ")
     }
 }

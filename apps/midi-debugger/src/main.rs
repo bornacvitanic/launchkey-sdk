@@ -9,7 +9,7 @@ use launchkey_sdk::launchkey::surface::display::{
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
-use midir::{Ignore, MidiInput};
+use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -17,27 +17,6 @@ use wmidi::MidiMessage;
 use launchkey_sdk::midi::input;
 
 fn main() {
-    let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
-    midi_in.ignore(Ignore::None);
-
-    // List available MIDI ports
-    let ports = list_midi_ports(&midi_in);
-    if ports.is_empty() {
-        println!("No MIDI input ports found.");
-        return;
-    }
-
-    // Let the user select a port
-    let port_index = match input::select_port(&ports) {
-        Some(idx) => idx,
-        None => {
-            println!("Invalid port selection.");
-            return;
-        }
-    };
-
-    println!("Connecting to port: {}", ports[port_index].1);
-
     // Set up LaunchkeyManager with default configuration
     let mut launchkey_manager = match LaunchkeyManager::default() {
         Ok(manager) => manager,
@@ -156,14 +135,24 @@ fn main() {
     // Set up a channel for communication between threads
     let (tx, rx) = mpsc::channel();
 
-    // Connect to the selected port
-    let _conn_in = match connect_to_port(midi_in, port_index, tx) {
-        Ok(conn) => conn,
-        Err(err) => {
-            println!("Error: {}", err);
-            return;
-        }
-    };
+    let midi_in = MidiInput::new("MIDI Listener").unwrap();
+    let ports = list_midi_ports(&midi_in);
+    println!("Select a MIDI input port:");
+    let mut connections: Vec<MidiInputConnection<()>> = vec![];
+    for (i, name) in ports.iter() {
+        println!("{}: {}", i, name);
+        let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
+        midi_in.ignore(Ignore::None);
+        // Connect to the selected port
+        let _conn_in = match connect_to_port(midi_in, *i, tx.clone()) {
+            Ok(conn) => conn,
+            Err(err) => {
+                println!("Error: {}", err);
+                return;
+            }
+        };
+        connections.push(_conn_in);
+    }
 
     println!("Listening for MIDI messages...");
 
