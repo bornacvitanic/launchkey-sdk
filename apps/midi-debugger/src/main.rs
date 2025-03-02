@@ -8,13 +8,13 @@ use launchkey_sdk::launchkey::surface::display::{
 };
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
-use launchkey_sdk::midi::events::MidiEvent;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
 use midir::{Ignore, MidiInput};
-use std::io::{self, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
+use wmidi::MidiMessage;
+use launchkey_sdk::midi::input;
 
 fn main() {
     let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
@@ -28,7 +28,7 @@ fn main() {
     }
 
     // Let the user select a port
-    let port_index = match select_port(&ports) {
+    let port_index = match input::select_port(&ports) {
         Some(idx) => idx,
         None => {
             println!("Invalid port selection.");
@@ -184,7 +184,11 @@ fn main() {
         }
 
         match rx.try_recv() {
-            Ok(event) => handle_midi_event(event), // Process the received MIDI event
+            Ok(data) => {
+                if let Ok(event) = MidiMessage::try_from(data.as_slice()) {
+                    input::log_midi_message(event);
+                }
+            } // Process the received MIDI event
             Err(mpsc::TryRecvError::Empty) => {}   // No message available, continue looping
             Err(mpsc::TryRecvError::Disconnected) => {
                 println!("MIDI channel disconnected.");
@@ -200,58 +204,4 @@ fn main() {
     if let Err(err) = launchkey_manager.disable_daw_mode() {
         eprintln!("Failed to disable DAW mode during cleanup: {}", err);
     }
-}
-
-fn handle_midi_event(event: MidiEvent) {
-    match event {
-        MidiEvent::NoteOn { note, velocity } => {
-            println!("Note On: {} (Velocity: {})", note, velocity);
-        }
-        MidiEvent::NoteOff { note } => {
-            println!("Note Off: {}", note);
-        }
-        MidiEvent::ControlChange { controller, value } => {
-            println!("Control Change: Controller {} Value {}", controller, value);
-        }
-        MidiEvent::ProgramChange { program } => {
-            println!("Program Change: Program {}", program);
-        }
-        MidiEvent::SysEx { data } => {
-            // Print SysEx data in hexadecimal format
-            let hex_data: String = data
-                .iter()
-                .map(|byte| format!("{:02X}", byte))
-                .collect::<Vec<String>>()
-                .join(" ");
-            println!("SysEx Message: {}", hex_data);
-
-            // Example: Handle specific SysEx responses
-            if data.starts_with(&[0x00, 0x20, 0x29, 0x02, 0x13, 0x09, 0x7F]) {
-                println!("Launchkey acknowledged bitmap reception.");
-            }
-        }
-    }
-}
-
-fn select_port(ports: &[(usize, String)]) -> Option<usize> {
-    println!("Select a MIDI input port:");
-    for (i, name) in ports.iter().enumerate() {
-        println!("{}: {}", i, name.1);
-    }
-
-    print!("Enter port index: ");
-    io::stdout().flush().unwrap();
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-
-    input.trim().parse::<usize>().ok().and_then(
-        |idx| {
-            if idx < ports.len() {
-                Some(idx)
-            } else {
-                None
-            }
-        },
-    )
 }

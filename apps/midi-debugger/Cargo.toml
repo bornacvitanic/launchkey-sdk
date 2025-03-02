@@ -5,5 +5,6 @@ edition = "2021"
 
 [dependencies]
 midir = "0.10.1"
+wmidi = "4.0.10"
 ctrlc = "3.2.2"
 launchkey-sdk = { path = "../../launchkey-sdk" }

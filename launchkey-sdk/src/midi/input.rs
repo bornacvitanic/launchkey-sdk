@@ -1,6 +1,8 @@
-use crate::midi::events::MidiEvent;
 use midir::{MidiInput, MidiInputConnection};
 use std::sync::mpsc;
+use wmidi::{MidiMessage, U7};
+use std::io;
+use std::io::Write;
 
 pub fn list_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
     midi_in
@@ -11,10 +13,33 @@ pub fn list_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
         .collect()
 }
 
+pub fn select_port(ports: &[(usize, String)]) -> Option<usize> {
+    println!("Select a MIDI input port:");
+    for (i, name) in ports.iter().enumerate() {
+        println!("{}: {}", i, name.1);
+    }
+
+    print!("Enter port index: ");
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    input.trim().parse::<usize>().ok().and_then(
+        |idx| {
+            if idx < ports.len() {
+                Some(idx)
+            } else {
+                None
+            }
+        },
+    )
+}
+
 pub fn connect_to_port(
     midi_in: MidiInput,
     port_index: usize,
-    tx: mpsc::Sender<MidiEvent>,
+    tx: mpsc::Sender<Vec<u8>>,
 ) -> Result<MidiInputConnection<()>, String> {
     let ports = midi_in.ports();
     let port = ports
@@ -27,13 +52,38 @@ pub fn connect_to_port(
             port,
             "midi-input",
             move |_timestamp, message, _context| {
-                if let Some(event) = MidiEvent::parse(message) {
-                    tx.send(event).unwrap();
-                }
+                tx.send(message.to_vec()).unwrap();
             },
             (),
         )
         .map_err(|_| "Failed to connect to MIDI port".to_string())?;
 
     Ok(conn_in)
+}
+
+pub fn log_midi_message(message: MidiMessage) {
+    match message {
+        MidiMessage::NoteOff(_, note, _) => println!("Note Off: {}", note),
+        MidiMessage::NoteOn(_, note, velocity) => println!("Note On: {} (Velocity: {:?})", note, velocity),
+        MidiMessage::PolyphonicKeyPressure(_, note, velocity) => println!("Polyphonic Key Pressure: {} (Velocity: {:?})", note, velocity),
+        MidiMessage::ControlChange(_, control_function, value) => println!("Control Change: Controller {:?} Value {:?}", control_function, value),
+        MidiMessage::ProgramChange(_, program_number) => println!("Program Change: Program {:?}", program_number),
+        MidiMessage::ChannelPressure(channel, velocity) => println!("Channel Pressure: {:?} (Velocity: {:?})", channel, velocity),
+        MidiMessage::PitchBendChange(_, pitch_bend) => println!("Pitch Bend: {:?}", pitch_bend),
+        MidiMessage::SysEx(data) => { println!("SysEx Message: {}", data.to_hex_string()); }
+        _ => {}
+    }
+}
+
+pub trait ToHexString {
+    fn to_hex_string(&self) -> String;
+}
+
+impl ToHexString for &[U7] {
+    fn to_hex_string(&self) -> String {
+        self.iter()
+            .map(|byte| format!("{:02X}", u8::from(*byte)))  // Convert U7 to u8 and format as hex
+            .collect::<Vec<String>>()
+            .join(" ")
+    }
 }

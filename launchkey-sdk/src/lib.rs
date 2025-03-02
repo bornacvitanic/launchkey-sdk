@@ -1,5 +1,4 @@
 pub mod midi {
-    pub mod events;
     pub mod input;
 }
 

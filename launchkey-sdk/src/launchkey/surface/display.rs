@@ -1,6 +1,5 @@
-use std::fmt;
 use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter, EnumString};
+use strum_macros::{Display, EnumIter};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]

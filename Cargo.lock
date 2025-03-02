@@ -136,6 +136,7 @@ dependencies = [
  "midir",
  "strum",
  "strum_macros",
+ "wmidi",
 ]
 
 [[package]]
@@ -167,6 +168,7 @@ dependencies = [
  "ctrlc",
  "launchkey-sdk",
  "midir",
+ "wmidi",
 ]
 
 [[package]]
@@ -507,3 +509,9 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "wmidi"
+version = "4.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e55f35b40ad0178422d06e9ba845041baf2faf04627b91fde928d0f6a21c712"
