@@ -44,7 +44,7 @@ fn main() {
             .send_command(LaunchKeyCommand::SetPadColor {
                 pad_in_mode: PadInMode::DAW(pad),
                 mode: LEDMode::Stationary,
-                color_palette_index: CommonColor::BrightGreen.to_palette_index(),
+                color_palette_index: CommonColor::BrightGreen.into(),
             })
             .unwrap();
     }
@@ -53,7 +53,7 @@ fn main() {
     launchkey_manager
         .send_command(LaunchKeyCommand::SetPadCustomColor {
             pad_in_mode: PadInMode::DAW(Pad::PlugIn),
-            color: CommonColor::BrightCyan.to_color(),
+            color: CommonColor::BrightCyan.into(),
         })
         .unwrap();
 
@@ -65,7 +65,7 @@ fn main() {
         .send_command(LaunchKeyCommand::SetPadColor {
             pad_in_mode: PadInMode::Drum(Pad::Mixer),
             mode: LEDMode::Stationary,
-            color_palette_index: CommonColor::BrightRed.to_palette_index(),
+            color_palette_index: CommonColor::BrightRed.into(),
         })
         .unwrap();
 

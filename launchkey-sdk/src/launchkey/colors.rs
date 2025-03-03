@@ -25,6 +25,12 @@ impl ColorPaletteIndex {
     }
 }
 
+impl From<CommonColor> for ColorPaletteIndex {
+    fn from(common_color: CommonColor) -> Self {
+        common_color.to_palette_index()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     pub r: u8,
@@ -85,6 +91,12 @@ impl Color {
             g: map_value(g),
             b: map_value(b),
         }
+    }
+}
+
+impl From<CommonColor> for Color {
+    fn from(common_color: CommonColor) -> Self {
+        common_color.to_color()
     }
 }
 
