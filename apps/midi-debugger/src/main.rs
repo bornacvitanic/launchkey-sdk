@@ -73,30 +73,26 @@ fn main() {
 
     // Configure and set text on the screen
     launchkey_manager
-        .send_command(LaunchKeyCommand::ConfigureDisplay {
-            target: DisplayTarget::Stationary,
-            config: DisplayConfig::Arrangement(Arrangement::NameValue),
-        })
-        .unwrap();
-    launchkey_manager
-        .send_command(LaunchKeyCommand::SetScreenText {
-            target: DisplayTarget::Stationary,
-            field: 0,
-            text: "Custom DAW".to_string(),
-        })
-        .unwrap();
-    launchkey_manager
-        .send_command(LaunchKeyCommand::SetScreenText {
-            target: DisplayTarget::Stationary,
-            field: 1,
-            text: "Hello, World!".to_string(),
-        })
-        .unwrap();
-    launchkey_manager
-        .send_command(LaunchKeyCommand::ConfigureDisplay {
-            target: DisplayTarget::Stationary,
-            config: DisplayConfig::Trigger,
-        })
+        .send_commands(&[
+            LaunchKeyCommand::ConfigureDisplay {
+                target: DisplayTarget::Stationary,
+                config: DisplayConfig::Arrangement(Arrangement::NameValue),
+            },
+            LaunchKeyCommand::SetScreenText {
+                target: DisplayTarget::Stationary,
+                field: 0,
+                text: "Custom DAW".to_string(),
+            },
+            LaunchKeyCommand::SetScreenText {
+                target: DisplayTarget::Stationary,
+                field: 1,
+                text: "Hello, World!".to_string(),
+            },
+            LaunchKeyCommand::ConfigureDisplay {
+                target: DisplayTarget::Stationary,
+                config: DisplayConfig::Trigger,
+            }
+        ])
         .unwrap();
 
     // Customize names for all encoders

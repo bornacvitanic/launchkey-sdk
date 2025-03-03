@@ -67,6 +67,27 @@ impl LaunchkeyManager {
         Ok(())
     }
 
+    /// Sends multiple MIDI commands to the Launchkey.
+    pub fn send_commands(
+        &mut self,
+        commands: &[LaunchKeyCommand],  // A slice of commands
+    ) -> Result<(), midir::SendError> {
+        for command in commands {
+            let bytes = command.as_bytes(&self.sku);
+
+            // Print the bytes in hexadecimal format
+            let mut hex_string = String::new();
+            for byte in &bytes {
+                let _ = &hex_string.write_str(&format!("{:02X} ", byte));
+            }
+            println!("Sending MIDI message: {}", hex_string.trim_end());
+
+            // Send the command
+            self.conn_out.send(&bytes)?;
+        }
+        Ok(())  // Return Ok if all commands are successfully sent
+    }
+
     /// Sets up DAW mode on the Launchkey.
     pub fn setup_daw_mode(&mut self) -> Result<(), midir::SendError> {
         self.send_command(LaunchKeyCommand::EnableDAWMode)?;
