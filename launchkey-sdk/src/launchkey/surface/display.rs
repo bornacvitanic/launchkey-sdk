@@ -1,10 +1,12 @@
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
+use crate::launchkey::surface::encoders::Encoder;
+use crate::launchkey::surface::faders::Fader;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum DisplayTarget {
-    Temporary(u8), // 00h - 1Fh
+    Temporary(TemporaryTarget),
     Stationary,
     GlobalTemporary,
     ModeName(ModeNameTarget),
@@ -13,7 +15,7 @@ pub enum DisplayTarget {
 impl From<DisplayTarget> for u8 {
     fn from(target: DisplayTarget) -> Self {
         match target {
-            DisplayTarget::Temporary(idx) => idx,
+            DisplayTarget::Temporary(temporary_target) => temporary_target.into(),
             DisplayTarget::Stationary => 0x20,
             DisplayTarget::GlobalTemporary => 0x21,
             DisplayTarget::ModeName(mode_name_target) => match mode_name_target {
@@ -25,6 +27,21 @@ impl From<DisplayTarget> for u8 {
                 ModeNameTarget::Drum => 0x23,
                 ModeNameTarget::Volume => 0x28,
             },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum TemporaryTarget {
+    Encoder(Encoder),
+    Fader(Fader)
+}
+
+impl From<TemporaryTarget> for u8 {
+    fn from(temporary_target: TemporaryTarget) -> Self {
+        match temporary_target {
+            TemporaryTarget::Encoder(encoder) => encoder.to_index(true),
+            TemporaryTarget::Fader(fader) => fader.to_index()
         }
     }
 }

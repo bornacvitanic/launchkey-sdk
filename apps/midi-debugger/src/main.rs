@@ -3,9 +3,7 @@ use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
-use launchkey_sdk::launchkey::surface::display::{
-    Arrangement, DisplayTarget, ModeNameTarget,
-};
+use launchkey_sdk::launchkey::surface::display::{Arrangement, DisplayTarget, ModeNameTarget, TemporaryTarget};
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -86,7 +84,7 @@ fn main() {
     for (index, encoder) in Encoder::all().enumerate() {
         launchkey_manager
             .send_command(LaunchKeyCommand::SetScreenText {
-                target: DisplayTarget::Temporary(encoder.to_absolute_mode_index()),
+                target: DisplayTarget::Temporary(TemporaryTarget::Encoder(encoder)),
                 field: 0,
                 text: format!("Custom Encoder {}", index + 1),
             })
