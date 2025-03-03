@@ -57,7 +57,7 @@ impl ModeNameTarget {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum DisplayConfig {
     Cancel,
@@ -65,12 +65,12 @@ pub enum DisplayConfig {
     Trigger,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Arrangement {
-    NameValue,
-    TitleNameValue,
-    TitleEightNames,
-    NameNumericValue,
+    NameValue(String, String),         // (name, value)
+    TitleNameValue(String, String, String),  // (title, name, value)
+    TitleEightNames(String, [String; 8]),    // (title, eight names)
+    NameNumericValue(String),    // (name)
 }
 
 impl From<DisplayConfig> for u8 {
@@ -78,10 +78,10 @@ impl From<DisplayConfig> for u8 {
         match config {
             DisplayConfig::Cancel => 0x00,
             DisplayConfig::Arrangement(arrangement) => match arrangement {
-                Arrangement::NameValue => 0x01,
-                Arrangement::TitleNameValue => 0x02,
-                Arrangement::TitleEightNames => 0x03,
-                Arrangement::NameNumericValue => 0x04,
+                Arrangement::NameValue(_,_) => 0x01,
+                Arrangement::TitleNameValue(_,_,_) => 0x02,
+                Arrangement::TitleEightNames(_,_) => 0x03,
+                Arrangement::NameNumericValue(_) => 0x04,
             },
             DisplayConfig::Trigger => 0x7F,
         }

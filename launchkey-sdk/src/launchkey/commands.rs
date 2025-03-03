@@ -7,7 +7,7 @@ use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
 use crate::launchkey::surface::buttons::{Brightness, LaunchKeyButton};
-use crate::launchkey::surface::display::{DisplayConfig, DisplayTarget};
+use crate::launchkey::surface::display::{Arrangement, DisplayConfig, DisplayTarget};
 use crate::launchkey::surface::pads::{LEDMode, PadInMode};
 
 pub enum LaunchKeyCommand {
@@ -32,6 +32,10 @@ pub enum LaunchKeyCommand {
     ConfigureDisplay {
         target: DisplayTarget,
         config: DisplayConfig,
+    },
+    SetScreenTextArrangement {
+        target: DisplayTarget,
+        arrangement: Arrangement,
     },
     SetScreenText {
         target: DisplayTarget,
@@ -93,7 +97,7 @@ impl LaunchKeyCommand {
             // Commands for screen control
             LaunchKeyCommand::ConfigureDisplay { target, config } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x04, (*target).into(), (*config).into()]);
+                data.extend_from_slice(&[0x04, (*target).into(), config.clone().into()]);
                 data.push(SYSEX_TERMINATOR);
                 data
             }
@@ -116,6 +120,38 @@ impl LaunchKeyCommand {
                 data.extend_from_slice(&[0x09, (*target).into()]);
                 data.extend_from_slice(bitmap_data);
                 data.push(SYSEX_TERMINATOR);
+                data
+            }
+            LaunchKeyCommand::SetScreenTextArrangement { target, arrangement } => {
+                let mut data: Vec<u8> = Vec::new();
+                // Start with configuring the display for the arrangement
+                data.extend(LaunchKeyCommand::ConfigureDisplay { target: *target, config: DisplayConfig::Arrangement(arrangement.clone()) }.as_bytes(sku));
+
+                // Handle different arrangement types
+                match arrangement {
+                    Arrangement::NameValue(name, value) => {
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 0, text: name.to_string() }.as_bytes(sku));
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 1, text: value.to_string() }.as_bytes(sku));
+                    }
+                    Arrangement::TitleNameValue(title, name, value) => {
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 0, text: title.to_string() }.as_bytes(sku));
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 1, text: name.to_string() }.as_bytes(sku));
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 2, text: value.to_string() }.as_bytes(sku));
+                    }
+                    Arrangement::TitleEightNames(title, names) => {
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 0, text: title.to_string() }.as_bytes(sku));
+                        for (i, name) in names.iter().enumerate() {
+                            data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: (i + 1) as u8, text: name.to_string()}.as_bytes(sku));
+                        }
+                    }
+                    Arrangement::NameNumericValue(name) => {
+                        data.extend(LaunchKeyCommand::SetScreenText { target: *target, field: 0, text: name.to_string() }.as_bytes(sku));
+                    }
+                }
+                
+                // Finalize with configuring the display for triggering
+                data.extend(LaunchKeyCommand::ConfigureDisplay { target: *target, config: DisplayConfig::Trigger }.as_bytes(sku));
+
                 data
             }
         }

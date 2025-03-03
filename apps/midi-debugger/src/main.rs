@@ -4,7 +4,7 @@ use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
 use launchkey_sdk::launchkey::surface::display::{
-    Arrangement, DisplayConfig, DisplayTarget, ModeNameTarget,
+    Arrangement, DisplayTarget, ModeNameTarget,
 };
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
@@ -72,28 +72,15 @@ fn main() {
         .unwrap();
 
     // Configure and set text on the screen
-    launchkey_manager
-        .send_commands(&[
-            LaunchKeyCommand::ConfigureDisplay {
-                target: DisplayTarget::Stationary,
-                config: DisplayConfig::Arrangement(Arrangement::NameValue),
-            },
-            LaunchKeyCommand::SetScreenText {
-                target: DisplayTarget::Stationary,
-                field: 0,
-                text: "Custom DAW".to_string(),
-            },
-            LaunchKeyCommand::SetScreenText {
-                target: DisplayTarget::Stationary,
-                field: 1,
-                text: "Hello, World!".to_string(),
-            },
-            LaunchKeyCommand::ConfigureDisplay {
-                target: DisplayTarget::Stationary,
-                config: DisplayConfig::Trigger,
-            }
-        ])
-        .unwrap();
+    launchkey_manager.send_command(
+        LaunchKeyCommand::SetScreenTextArrangement {
+            target: DisplayTarget::Stationary,
+            arrangement: Arrangement::NameValue(
+                "Custom DAW".to_string(),
+                "Hello, World!".to_string()
+            )
+        }
+    ).unwrap();
 
     // Customize names for all encoders
     for (index, encoder) in Encoder::all().enumerate() {
