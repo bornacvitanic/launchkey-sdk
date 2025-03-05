@@ -6,19 +6,57 @@ use crate::launchkey::surface::faders::Fader;
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum DisplayTarget {
-    Temporary(TemporaryTarget),
-    Stationary,
-    GlobalTemporary,
-    ModeName(ModeNameTarget),
+    Global(GlobalDisplayTarget),
+    Contextual(ContextualDisplayTarget),
 }
 
 impl From<DisplayTarget> for u8 {
     fn from(target: DisplayTarget) -> Self {
         match target {
-            DisplayTarget::Temporary(temporary_target) => temporary_target.into(),
-            DisplayTarget::Stationary => 0x20,
-            DisplayTarget::GlobalTemporary => 0x21,
-            DisplayTarget::ModeName(mode_name_target) => match mode_name_target {
+            DisplayTarget::Global(global) => global.into(),
+            DisplayTarget::Contextual(contextual) => contextual.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum GlobalDisplayTarget {
+    Stationary,
+    Temporary
+}
+
+impl From<GlobalDisplayTarget> for DisplayTarget {
+    fn from(target: GlobalDisplayTarget) -> Self {
+        DisplayTarget::Global(target)
+    }
+}
+
+impl From<GlobalDisplayTarget> for u8 {
+    fn from(target: GlobalDisplayTarget) -> Self {
+        match target {
+            GlobalDisplayTarget::Stationary => 0x20,
+            GlobalDisplayTarget::Temporary => 0x21,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ContextualDisplayTarget {
+    Temporary(TemporaryTarget),
+    ModeName(ModeNameTarget)
+}
+
+impl From<ContextualDisplayTarget> for DisplayTarget {
+    fn from(target: ContextualDisplayTarget) -> Self {
+        DisplayTarget::Contextual(target)
+    }
+}
+
+impl From<ContextualDisplayTarget> for u8 {
+    fn from(target: ContextualDisplayTarget) -> Self {
+        match target {
+            ContextualDisplayTarget::Temporary(temporary_target) => temporary_target.into(),
+            ContextualDisplayTarget::ModeName(mode_name_target) => match mode_name_target {
                 ModeNameTarget::Plugin => 0x25,
                 ModeNameTarget::Mixer => 0x24,
                 ModeNameTarget::Sends => 0x26,

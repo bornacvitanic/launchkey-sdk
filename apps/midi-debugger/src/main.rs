@@ -3,7 +3,7 @@ use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
-use launchkey_sdk::launchkey::surface::display::{Arrangement, DisplayTarget, ModeNameTarget, TemporaryTarget};
+use launchkey_sdk::launchkey::surface::display::{GlobalDisplayTarget, Arrangement, ContextualDisplayTarget, ModeNameTarget, TemporaryTarget};
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
@@ -72,7 +72,17 @@ fn main() {
     // Configure and set text on the screen
     launchkey_manager.send_command(
         LaunchKeyCommand::SetScreenTextArrangement {
-            target: DisplayTarget::Stationary,
+            target: GlobalDisplayTarget::Stationary,
+            arrangement: Arrangement::NameValue(
+                "Custom DAW".to_string(),
+                "Hello, World!".to_string()
+            )
+        }
+    ).unwrap();
+
+    launchkey_manager.send_command(
+        LaunchKeyCommand::SetScreenTextArrangement {
+            target: GlobalDisplayTarget::Temporary,
             arrangement: Arrangement::NameValue(
                 "Custom DAW".to_string(),
                 "Hello, World!".to_string()
@@ -83,9 +93,8 @@ fn main() {
     // Customize names for all encoders
     for (index, encoder) in Encoder::all().enumerate() {
         launchkey_manager
-            .send_command(LaunchKeyCommand::SetScreenText {
-                target: DisplayTarget::Temporary(TemporaryTarget::Encoder(encoder)),
-                field: 0,
+            .send_command(LaunchKeyCommand::SetScreenTextContextual {
+                target: ContextualDisplayTarget::Temporary(TemporaryTarget::Encoder(encoder)),
                 text: format!("Custom Encoder {}", index + 1),
             })
             .unwrap();
@@ -94,9 +103,8 @@ fn main() {
     // Customizing PAD mode names
     for mode_name_target in ModeNameTarget::all() {
         launchkey_manager
-            .send_command(LaunchKeyCommand::SetScreenText {
-                target: DisplayTarget::ModeName(mode_name_target),
-                field: 0,
+            .send_command(LaunchKeyCommand::SetScreenTextContextual {
+                target: ContextualDisplayTarget::ModeName(mode_name_target),
                 text: format!("Custom {}", mode_name_target),
             })
             .unwrap();
@@ -108,7 +116,7 @@ fn main() {
     // Populate the bitmap_data array with your custom bitmap
     launchkey_manager
         .send_command(LaunchKeyCommand::SendScreenBitmap {
-            target: DisplayTarget::GlobalTemporary,
+            target: GlobalDisplayTarget::Temporary,
             bitmap_data,
         })
         .unwrap();
