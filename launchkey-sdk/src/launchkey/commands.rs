@@ -29,7 +29,7 @@ pub enum LaunchKeyCommand {
         pad_in_mode: PadInMode,
         color: Color,
     },
-    SetScreenTextArrangement {
+    SetScreenTextGlobal {
         target: GlobalDisplayTarget,
         arrangement: Arrangement,
     },
@@ -90,7 +90,7 @@ impl LaunchKeyCommand {
             }
 
             // Commands for screen control
-            LaunchKeyCommand::SetScreenTextArrangement { target, arrangement } => {
+            LaunchKeyCommand::SetScreenTextGlobal { target, arrangement } => {
                 let mut data: Vec<u8> = Vec::new();
                 // Start with configuring the display for the arrangement
                 data.extend(configure_display((*target).into(), DisplayConfig::Arrangement(arrangement.clone()), sku));

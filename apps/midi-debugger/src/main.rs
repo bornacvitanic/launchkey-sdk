@@ -71,7 +71,7 @@ fn main() {
 
     // Configure and set text on the screen
     launchkey_manager.send_command(
-        LaunchKeyCommand::SetScreenTextArrangement {
+        LaunchKeyCommand::SetScreenTextGlobal {
             target: GlobalDisplayTarget::Stationary,
             arrangement: Arrangement::NameValue(
                 "Custom DAW".to_string(),
@@ -81,11 +81,11 @@ fn main() {
     ).unwrap();
 
     launchkey_manager.send_command(
-        LaunchKeyCommand::SetScreenTextArrangement {
+        LaunchKeyCommand::SetScreenTextGlobal {
             target: GlobalDisplayTarget::Temporary,
             arrangement: Arrangement::NameValue(
                 "Custom DAW".to_string(),
-                "Hello, World!".to_string()
+                "Temporary".to_string()
             )
         }
     ).unwrap();
