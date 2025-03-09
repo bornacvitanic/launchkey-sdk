@@ -1,9 +1,14 @@
 #[derive(Debug, Clone)]
 pub enum FaderMode {
+    /// Controls track volume levels.
     Volume,
+    /// User-defined fader mappings (slot 1).
     Custom1,
+    /// User-defined fader mappings (slot 2).
     Custom2,
+    /// User-defined fader mappings (slot 3).
     Custom3,
+    /// User-defined fader mappings (slot 4).
     Custom4,
 }
 

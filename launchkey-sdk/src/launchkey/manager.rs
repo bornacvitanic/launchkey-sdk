@@ -24,7 +24,6 @@ impl LaunchKeyState for StandaloneMode {}
 pub struct LaunchkeyManager<S: LaunchKeyState + 'static> {
     conn_out: Rc<RefCell<midir::MidiOutputConnection>>,
     sku: LaunchKeySku,
-    in_daw_drum_mode: bool,
     state: PhantomData<S>,
 }
 
@@ -53,7 +52,17 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
 
     /// Sends a MIDI command to the Launchkey.
     fn _send_command(&mut self, command: LaunchkeyCommand) -> Result<(), midir::SendError> {
-        self._send_bytes(command.as_bytes(&self.sku))
+        match command {
+            LaunchkeyCommand::SetPadMode(ref pad_mode) => {
+                match pad_mode {
+                    PadMode::Drum => self._send_bytes(DISABLE_DRUM_DAW_MODE.to_vec()),
+                    PadMode::DrumDAW => self._send_bytes(ENABLE_DRUM_DAW_MODE.to_vec()),
+                    _ => Ok({}),
+                }?;
+                self._send_bytes(command.as_bytes(&self.sku))
+            }
+            command => self._send_bytes(command.as_bytes(&self.sku)),
+        }
     }
 
     /// Sends raw byte command to the Launchkey.
@@ -78,7 +87,6 @@ impl LaunchkeyManager<StandaloneMode> {
         Ok(Self {
             conn_out: Rc::new(RefCell::new(conn_out)),
             sku,
-            in_daw_drum_mode: false,
             state: PhantomData,
         })
     }
@@ -135,7 +143,6 @@ impl LaunchkeyManager<StandaloneMode> {
         Ok(LaunchkeyManager {
             conn_out: self.conn_out.clone(),
             sku: self.sku.clone(),
-            in_daw_drum_mode: self.in_daw_drum_mode,
             state: PhantomData,
         })
     }
@@ -150,7 +157,6 @@ impl LaunchkeyManager<DAWMode> {
         Ok(LaunchkeyManager {
             conn_out: self.conn_out.clone(),
             sku: self.sku.clone(),
-            in_daw_drum_mode: self.in_daw_drum_mode,
             state: PhantomData,
         })
     }

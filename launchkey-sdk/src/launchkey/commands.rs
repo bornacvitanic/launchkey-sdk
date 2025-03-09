@@ -1,7 +1,8 @@
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{
-    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR,
+    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DRUM_DAW_MODE, ENABLE_DRUM_DAW_MODE,
+    SYSEX_TERMINATOR,
 };
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
@@ -11,6 +12,7 @@ use crate::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, DisplayConfig, DisplayTarget, GlobalDisplayTarget,
 };
 use crate::launchkey::surface::pads::{LEDMode, PadInMode};
+use image::EncodableLayout;
 
 #[derive(Debug, Clone)]
 pub enum LaunchkeyCommand {

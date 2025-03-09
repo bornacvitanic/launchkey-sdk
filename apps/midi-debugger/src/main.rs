@@ -3,6 +3,7 @@ use launchkey_sdk::launchkey::bitmap::LaunchkeyBitmap;
 use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
+use launchkey_sdk::launchkey::modes::pad_mode::PadMode;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
 use launchkey_sdk::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget, TemporaryTarget,
@@ -64,7 +65,9 @@ fn main() {
         .unwrap();
 
     // Enable DAW Drum Mode
-    launchkey_manager.enable_drum_daw_mode().unwrap();
+    launchkey_manager
+        .send_command(LaunchkeyCommand::SetPadMode(PadMode::DrumDAW))
+        .unwrap();
 
     // Set a pad to HighGreen in DAW Drum Mode
     launchkey_manager
