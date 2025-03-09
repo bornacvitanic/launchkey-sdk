@@ -107,7 +107,7 @@ impl LaunchkeyManager<StandaloneMode> {
         Self::new(midi_out, out_port, LaunchKeySku::Mini)
     }
 
-    /// The only command allowed in Standalone Mode; sets global screen text.
+    /// Sends a command to set the global screen text in Standalone Mode.
     pub fn set_screen_text_global(
         &mut self,
         target: GlobalDisplayTarget,
@@ -116,6 +116,18 @@ impl LaunchkeyManager<StandaloneMode> {
         self._send_command(LaunchkeyCommand::SetScreenTextGlobal {
             target,
             arrangement,
+        })
+    }
+
+    /// Sends a command to display a screen bitmap in Standalone Mode.
+    pub fn send_screen_bitmap(
+        &mut self,
+        target: GlobalDisplayTarget,
+        bitmap_data: [u8; 1216],
+    ) -> Result<(), midir::SendError> {
+        self._send_command(LaunchkeyCommand::SendScreenBitmap {
+            target,
+            bitmap_data,
         })
     }
 
