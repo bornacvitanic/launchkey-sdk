@@ -19,5 +19,6 @@ pub mod launchkey {
         pub mod faders;
         pub mod pads;
     }
+    pub mod bitmap;
     pub mod colors;
 }

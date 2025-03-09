@@ -8,3 +8,4 @@ midir = "0.10.1"
 wmidi = "4.0.10"
 ctrlc = "3.2.2"
 launchkey-sdk = { path = "../../launchkey-sdk" }
+image = "0.25.5"

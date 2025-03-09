@@ -1,3 +1,4 @@
+use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{
     LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR,
@@ -39,7 +40,7 @@ pub enum LaunchkeyCommand {
     },
     SendScreenBitmap {
         target: GlobalDisplayTarget,
-        bitmap_data: [u8; 1216],
+        bitmap: LaunchkeyBitmap,
     },
 }
 
@@ -170,13 +171,10 @@ impl LaunchkeyCommand {
             LaunchkeyCommand::SetScreenTextContextual { target, text } => {
                 self.set_screen_text((*target).into(), 0, text.to_string(), sku)
             }
-            LaunchkeyCommand::SendScreenBitmap {
-                target,
-                bitmap_data,
-            } => {
+            LaunchkeyCommand::SendScreenBitmap { target, bitmap } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[0x09, (*target).into()]);
-                data.extend_from_slice(bitmap_data);
+                data.extend_from_slice(bitmap.as_ref());
                 data.push(SYSEX_TERMINATOR);
                 data
             }

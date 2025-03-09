@@ -1,3 +1,4 @@
+use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::commands::LaunchkeyCommand;
 use crate::launchkey::constants::{
     LaunchKeySku, DISABLE_DAW_MODE, DISABLE_DRUM_DAW_MODE, ENABLE_DAW_MODE, ENABLE_DRUM_DAW_MODE,
@@ -123,12 +124,9 @@ impl LaunchkeyManager<StandaloneMode> {
     pub fn send_screen_bitmap(
         &mut self,
         target: GlobalDisplayTarget,
-        bitmap_data: [u8; 1216],
+        bitmap: LaunchkeyBitmap,
     ) -> Result<(), midir::SendError> {
-        self._send_command(LaunchkeyCommand::SendScreenBitmap {
-            target,
-            bitmap_data,
-        })
+        self._send_command(LaunchkeyCommand::SendScreenBitmap { target, bitmap })
     }
 
     /// Enables DAW Mode and transitions the manager to DAW mode.

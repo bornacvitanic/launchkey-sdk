@@ -1,4 +1,5 @@
 use ctrlc;
+use launchkey_sdk::launchkey::bitmap::LaunchkeyBitmap;
 use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
@@ -113,13 +114,12 @@ fn main() {
     }
 
     // Send a bitmap to the screen
-    let mut bitmap_data = [0u8; 1216];
-    bitmap_data = bitmap_data.map(|_e| 0x12);
-    // Populate the bitmap_data array with your custom bitmap
+    let img = image::open("logo.png").map_err(|e| e.to_string()).unwrap();
+    let bitmap = LaunchkeyBitmap::from_image(img, 128).unwrap();
     launchkey_manager
         .send_command(LaunchkeyCommand::SendScreenBitmap {
             target: GlobalDisplayTarget::Temporary,
-            bitmap_data,
+            bitmap,
         })
         .unwrap();
 
