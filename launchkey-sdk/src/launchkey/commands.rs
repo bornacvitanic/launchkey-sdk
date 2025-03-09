@@ -1,6 +1,6 @@
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
-use crate::launchkey::constants::{LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR, CC_CH7, PAD_MODE_CC, ENCODER_MODE_CC, FADER_MODE_CC};
+use crate::launchkey::constants::{LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR, CC_CH7, PAD_MODE_CC, ENCODER_MODE_CC, FADER_MODE_CC, BITMAP_HEADER_BYTE, CUSTOM_COLOR_COMMAND, CONFIGURE_DISPLAY_COMMAND, SET_SCREEN_TEXT_COMMAND};
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
@@ -75,8 +75,8 @@ impl LaunchkeyCommand {
             LaunchkeyCommand::SetPadCustomColor { pad_in_mode, color } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[
-                    0x01,
-                    0x43,
+                    CUSTOM_COLOR_COMMAND.0,
+                    CUSTOM_COLOR_COMMAND.1,
                     (*pad_in_mode).to_index(),
                     color.r,
                     color.g,
@@ -171,7 +171,7 @@ impl LaunchkeyCommand {
             }
             LaunchkeyCommand::SendScreenBitmap { target, bitmap } => {
                 let mut data = header.to_vec();
-                data.extend_from_slice(&[0x09, (*target).into()]);
+                data.extend_from_slice(&[BITMAP_HEADER_BYTE, (*target).into()]);
                 data.extend_from_slice(bitmap.as_ref());
                 data.push(SYSEX_TERMINATOR);
                 data
@@ -185,7 +185,7 @@ impl LaunchkeyCommand {
         sku: &LaunchKeySku,
     ) -> Vec<u8> {
         let mut data = sku.sys_ex_header().to_vec();
-        data.extend_from_slice(&[0x04, target.into(), config.clone().into()]);
+        data.extend_from_slice(&[CONFIGURE_DISPLAY_COMMAND, target.into(), config.clone().into()]);
         data.push(SYSEX_TERMINATOR);
         data
     }
@@ -198,7 +198,7 @@ impl LaunchkeyCommand {
         sku: &LaunchKeySku,
     ) -> Vec<u8> {
         let mut data = sku.sys_ex_header().to_vec();
-        data.extend_from_slice(&[0x06, target.into(), field]);
+        data.extend_from_slice(&[SET_SCREEN_TEXT_COMMAND, target.into(), field]);
         data.extend(text.as_bytes());
         data.push(SYSEX_TERMINATOR);
         data
