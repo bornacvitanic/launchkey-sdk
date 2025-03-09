@@ -5,7 +5,7 @@ use std::io::Write;
 use std::sync::mpsc;
 use wmidi::MidiMessage;
 
-pub fn list_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
+pub fn get_named_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
     midi_in
         .ports()
         .iter()

@@ -10,7 +10,7 @@ use launchkey_sdk::launchkey::surface::display::{
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input;
-use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
+use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -127,19 +127,18 @@ fn main() {
     let (tx, rx) = mpsc::channel();
 
     let midi_in = MidiInput::new("MIDI Listener").unwrap();
-    let ports = list_midi_ports(&midi_in);
-    println!("Select a MIDI input port:");
+    let ports = get_named_midi_ports(&midi_in);
+
     let mut connections: Vec<MidiInputConnection<()>> = vec![];
     for (i, name) in ports.iter() {
-        println!("{}: {}", i, name);
-        let mut midi_in = MidiInput::new("MIDI Listener").unwrap();
+        let mut midi_in = MidiInput::new(&format!("{} Listener", name)).unwrap();
         midi_in.ignore(Ignore::None);
         // Connect to the selected port
         let _conn_in = match connect_to_port(midi_in, *i, tx.clone()) {
             Ok(conn) => conn,
             Err(err) => {
                 println!("Error: {}", err);
-                return;
+                continue;
             }
         };
         connections.push(_conn_in);
