@@ -1,9 +1,6 @@
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
-use crate::launchkey::constants::{
-    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DRUM_DAW_MODE, ENABLE_DRUM_DAW_MODE,
-    SYSEX_TERMINATOR,
-};
+use crate::launchkey::constants::{LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR, CC_CH7, PAD_MODE_CC, ENCODER_MODE_CC, FADER_MODE_CC};
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
@@ -12,7 +9,6 @@ use crate::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, DisplayConfig, DisplayTarget, GlobalDisplayTarget,
 };
 use crate::launchkey::surface::pads::{LEDMode, PadInMode};
-use image::EncodableLayout;
 
 #[derive(Debug, Clone)]
 pub enum LaunchkeyCommand {
@@ -50,9 +46,9 @@ impl LaunchkeyCommand {
     pub(crate) fn as_bytes(&self, sku: &LaunchKeySku) -> Vec<u8> {
         let header = sku.sys_ex_header();
         match self {
-            LaunchkeyCommand::SetPadMode(mode) => mode.as_bytes(),
-            LaunchkeyCommand::SetEncoderMode(mode) => mode.as_bytes(),
-            LaunchkeyCommand::SetFaderMode(mode) => mode.as_bytes(),
+            LaunchkeyCommand::SetPadMode(mode) => vec![CC_CH7, PAD_MODE_CC, mode.to_value()],
+            LaunchkeyCommand::SetEncoderMode(mode) => vec![CC_CH7, ENCODER_MODE_CC, mode.to_value()],
+            LaunchkeyCommand::SetFaderMode(mode) => vec![CC_CH7, FADER_MODE_CC, mode.to_value()],
             LaunchkeyCommand::SetButtonBrightness {
                 launch_key_button,
                 brightness,

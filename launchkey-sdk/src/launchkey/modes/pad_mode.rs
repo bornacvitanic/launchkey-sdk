@@ -1,3 +1,5 @@
+use crate::bidirectional_enum_mappings;
+
 #[derive(Debug, Clone)]
 pub enum PadMode {
     /// Used for controlling Digital Audio Workstations.
@@ -34,20 +36,15 @@ pub enum PadMode {
     ArpPattern,
 }
 
-impl PadMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            PadMode::DAW => 0x02,
-            PadMode::Drum => 0x01,
-            PadMode::DrumDAW => 0x0F,
-            PadMode::UserChords => 0x04,
-            PadMode::ChordMap => 0x0E,
-            PadMode::Custom1 => 0x05,
-            PadMode::Custom2 => 0x06,
-            PadMode::Custom3 => 0x07,
-            PadMode::Custom4 => 0x08,
-            PadMode::ArpPattern => 0x0D,
-        };
-        vec![0xB6, 0x1D, value]
-    }
-}
+bidirectional_enum_mappings!(PadMode, u8, {
+    DAW => 0x02,
+    Drum => 0x01,
+    DrumDAW => 0x0F,
+    UserChords => 0x04,
+    ChordMap => 0x0E,
+    Custom1 => 0x05,
+    Custom2 => 0x06,
+    Custom3 => 0x07,
+    Custom4 => 0x08,
+    ArpPattern => 0x0D,
+});

@@ -1,4 +1,4 @@
-use crate::{bidirectional_enum_mappings, bidirectional_enum_mappings_with_mode};
+use crate::{bidirectional_enum_mappings_with_mode};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 

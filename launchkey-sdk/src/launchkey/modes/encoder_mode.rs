@@ -1,3 +1,5 @@
+use crate::bidirectional_enum_mappings;
+
 #[derive(Debug, Clone)]
 pub enum EncoderMode {
     /// Controls plugin parameters.
@@ -18,18 +20,13 @@ pub enum EncoderMode {
     Custom4,
 }
 
-impl EncoderMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            EncoderMode::Plugin => 0x02,
-            EncoderMode::Mixer => 0x01,
-            EncoderMode::Sends => 0x04,
-            EncoderMode::Transport => 0x05,
-            EncoderMode::Custom1 => 0x06,
-            EncoderMode::Custom2 => 0x07,
-            EncoderMode::Custom3 => 0x08,
-            EncoderMode::Custom4 => 0x09,
-        };
-        vec![0xB6, 0x1E, value]
-    }
-}
+bidirectional_enum_mappings!(EncoderMode, u8, {
+    Plugin => 0x02,
+    Mixer => 0x01,
+    Sends => 0x04,
+    Transport => 0x05,
+    Custom1 => 0x06,
+    Custom2 => 0x07,
+    Custom3 => 0x08,
+    Custom4 => 0x09,
+});

@@ -1,3 +1,5 @@
+use crate::bidirectional_enum_mappings;
+
 #[derive(Debug, Clone)]
 pub enum FaderMode {
     /// Controls track volume levels.
@@ -12,15 +14,10 @@ pub enum FaderMode {
     Custom4,
 }
 
-impl FaderMode {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let value = match self {
-            FaderMode::Volume => 0x01,
-            FaderMode::Custom1 => 0x06,
-            FaderMode::Custom2 => 0x07,
-            FaderMode::Custom3 => 0x08,
-            FaderMode::Custom4 => 0x09,
-        };
-        vec![0xB6, 0x1F, value]
-    }
-}
+bidirectional_enum_mappings!(FaderMode, u8, {
+    Volume => 0x01,
+    Custom1 => 0x06,
+    Custom2 => 0x07,
+    Custom3 => 0x08,
+    Custom4 => 0x09,
+});

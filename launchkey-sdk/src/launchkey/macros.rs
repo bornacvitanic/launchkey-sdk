@@ -4,7 +4,7 @@ macro_rules! bidirectional_enum_mappings {
     ($name:ident, $type:ty, { $($variant:ident => $value:expr),* $(,)? }) => {
         impl $name {
             // Generates O(1) lookup for single mapping
-            pub fn to_value(self) -> $type {
+            pub fn to_value(&self) -> $type {
                 match self {
                     $(
                         $name::$variant => $value,
@@ -38,7 +38,7 @@ macro_rules! bidirectional_enum_mappings_with_mode {
 
         impl $name {
             // Generates O(1) lookup for each mode
-            pub fn to_value_mode(self, mode: $mode_name) -> $type {
+            pub fn to_value_mode(&self, mode: $mode_name) -> $type {
                 match mode {
                     $(
                         $mode_name::$mode => match self {
