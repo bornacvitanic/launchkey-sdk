@@ -1,3 +1,4 @@
+use crate::{bidirectional_enum_mappings, bidirectional_enum_mappings_with_mode};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -42,60 +43,47 @@ pub enum Pad {
     PadCustom4,
 }
 
-impl Pad {
-    /// Get the MIDI index for the pad in DAW Mode
-    pub fn to_daw_index(self) -> u8 {
-        match self {
-            Pad::PlugIn => 0x60,
-            Pad::Mixer => 0x61,
-            Pad::Sends => 0x62,
-            Pad::Transport => 0x63,
-            Pad::EncoderCustom1 => 0x64,
-            Pad::EncoderCustom2 => 0x65,
-            Pad::EncoderCustom3 => 0x66,
-            Pad::EncoderCustom4 => 0x67,
-            Pad::DAW => 0x70,
-            Pad::Drum => 0x71,
-            Pad::UserChord => 0x72,
-            Pad::ChordMap => 0x73,
-            Pad::PadCustom1 => 0x74,
-            Pad::PadCustom2 => 0x75,
-            Pad::PadCustom3 => 0x76,
-            Pad::PadCustom4 => 0x77,
+bidirectional_enum_mappings_with_mode!(
+    Pad, u8, PadCCIndex,
+    {
+        DAW => {
+            PlugIn => 0x60,
+            Mixer => 0x61,
+            Sends => 0x62,
+            Transport => 0x63,
+            EncoderCustom1 => 0x64,
+            EncoderCustom2 => 0x65,
+            EncoderCustom3 => 0x66,
+            EncoderCustom4 => 0x67,
+            DAW => 0x70,
+            Drum => 0x71,
+            UserChord => 0x72,
+            ChordMap => 0x73,
+            PadCustom1 => 0x74,
+            PadCustom2 => 0x75,
+            PadCustom3 => 0x76,
+            PadCustom4 => 0x77
+        },
+        Drum => {
+            PlugIn => 0x28,
+            Mixer => 0x29,
+            Sends => 0x2A,
+            Transport => 0x2B,
+            EncoderCustom1 => 0x30,
+            EncoderCustom2 => 0x31,
+            EncoderCustom3 => 0x32,
+            EncoderCustom4 => 0x33,
+            DAW => 0x24,
+            Drum => 0x25,
+            UserChord => 0x26,
+            ChordMap => 0x27,
+            PadCustom1 => 0x2C,
+            PadCustom2 => 0x2D,
+            PadCustom3 => 0x2E,
+            PadCustom4 => 0x7F
         }
     }
-
-    /// Get the MIDI index for the pad in Drum Mode
-    pub fn to_drum_index(self) -> u8 {
-        match self {
-            Pad::PlugIn => 0x28,
-            Pad::Mixer => 0x29,
-            Pad::Sends => 0x2A,
-            Pad::Transport => 0x2B,
-            Pad::EncoderCustom1 => 0x30,
-            Pad::EncoderCustom2 => 0x31,
-            Pad::EncoderCustom3 => 0x32,
-            Pad::EncoderCustom4 => 0x33,
-            Pad::DAW => 0x24,
-            Pad::Drum => 0x25,
-            Pad::UserChord => 0x26,
-            Pad::ChordMap => 0x27,
-            Pad::PadCustom1 => 0x2C,
-            Pad::PadCustom2 => 0x2D,
-            Pad::PadCustom3 => 0x2E,
-            Pad::PadCustom4 => 0x7F,
-        }
-    }
-
-    /// Get the correct MIDI index based on whether the pad is in DAW or Drum mode
-    pub fn to_index(self, is_drum: bool) -> u8 {
-        if is_drum {
-            self.to_drum_index()
-        } else {
-            self.to_daw_index()
-        }
-    }
-}
+);
 
 impl Pad {
     /// Get all possible variants of `Pad`.
@@ -125,8 +113,8 @@ impl PadInMode {
     /// Get the correct MIDI index based on whether it's in DAW or Drum mode
     pub fn to_index(self) -> u8 {
         match self {
-            PadInMode::DAW(pad) => pad.to_daw_index(),
-            PadInMode::Drum(pad) => pad.to_drum_index(),
+            PadInMode::DAW(pad) => pad.to_value_mode(PadCCIndex::DAW),
+            PadInMode::Drum(pad) => pad.to_value_mode(PadCCIndex::Drum),
         }
     }
 }

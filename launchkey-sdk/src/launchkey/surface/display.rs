@@ -79,7 +79,7 @@ impl From<TemporaryTarget> for u8 {
     fn from(temporary_target: TemporaryTarget) -> Self {
         match temporary_target {
             TemporaryTarget::Encoder(encoder) => encoder.to_index(true),
-            TemporaryTarget::Fader(fader) => fader.to_index(),
+            TemporaryTarget::Fader(fader) => fader.to_value(),
         }
     }
 }

@@ -21,4 +21,5 @@ pub mod launchkey {
     }
     pub mod bitmap;
     pub mod colors;
+    pub mod macros;
 }

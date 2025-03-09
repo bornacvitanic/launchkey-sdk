@@ -1,3 +1,4 @@
+use crate::bidirectional_enum_mappings;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -14,22 +15,19 @@ pub enum Fader {
     Fader9,
 }
 
-impl Fader {
-    /// Get the correct Control Change index
-    pub fn to_index(self) -> u8 {
-        match self {
-            Fader::Fader1 => 0x05,
-            Fader::Fader2 => 0x06,
-            Fader::Fader3 => 0x07,
-            Fader::Fader4 => 0x08,
-            Fader::Fader5 => 0x09,
-            Fader::Fader6 => 0x0A,
-            Fader::Fader7 => 0x0B,
-            Fader::Fader8 => 0x0C,
-            Fader::Fader9 => 0x0D,
-        }
-    }
+bidirectional_enum_mappings!(Fader, u8, {
+    Fader1 => 0x05,
+    Fader2 => 0x06,
+    Fader3 => 0x07,
+    Fader4 => 0x08,
+    Fader5 => 0x09,
+    Fader6 => 0x0A,
+    Fader7 => 0x0B,
+    Fader8 => 0x0C,
+    Fader9 => 0x0D,
+});
 
+impl Fader {
     /// Get all possible variants of `Fader`.
     pub fn all() -> impl Iterator<Item = Self> {
         Self::iter()
