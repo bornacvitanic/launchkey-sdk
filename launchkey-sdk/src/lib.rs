@@ -16,8 +16,8 @@ pub mod launchkey {
         pub mod buttons;
         pub mod display;
         pub mod encoders;
-        pub mod pads;
         pub mod faders;
+        pub mod pads;
     }
     pub mod colors;
 }

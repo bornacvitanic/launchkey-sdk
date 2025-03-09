@@ -1,18 +1,70 @@
-use crate::launchkey::commands::LaunchKeyCommand;
-use crate::launchkey::constants::LaunchKeySku;
+use crate::launchkey::commands::LaunchkeyCommand;
+use crate::launchkey::constants::{
+    LaunchKeySku, DISABLE_DAW_MODE, DISABLE_DRUM_DAW_MODE, ENABLE_DAW_MODE, ENABLE_DRUM_DAW_MODE,
+};
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
+use crate::launchkey::surface::display::{Arrangement, GlobalDisplayTarget};
 use midir::{MidiOutput, MidiOutputPort};
-use std::fmt::Write;
+use std::any::TypeId;
+use std::cell::RefCell;
+use std::marker::PhantomData;
+use std::rc::Rc;
 
-pub struct LaunchkeyManager {
-    conn_out: midir::MidiOutputConnection,
+pub trait LaunchKeyState {}
+
+pub struct DAWMode;
+impl LaunchKeyState for DAWMode {}
+
+pub struct StandaloneMode;
+impl LaunchKeyState for StandaloneMode {}
+
+pub struct LaunchkeyManager<S: LaunchKeyState + 'static> {
+    conn_out: Rc<RefCell<midir::MidiOutputConnection>>,
     sku: LaunchKeySku,
     in_daw_drum_mode: bool,
+    state: PhantomData<S>,
 }
 
-impl LaunchkeyManager {
+impl<S: LaunchKeyState> LaunchkeyManager<S> {
+    /// Converts a slice of bytes into a formatted hexadecimal string.
+    fn bytes_to_hex_string(&self, bytes: &[u8]) -> String {
+        bytes
+            .iter()
+            .map(|byte| format!("{:02X} ", byte))
+            .collect::<String>()
+            .trim_end() // Remove trailing space
+            .to_string()
+    }
+
+    /// Enables DAW mode on the Launchkey device by sending a MIDI message.
+    fn _enable_daw_mode(&mut self) -> Result<(), midir::SendError> {
+        println!("Enabling DAW Mode");
+        self._send_bytes(ENABLE_DAW_MODE.to_vec())
+    }
+
+    /// Disables DAW mode on the Launchkey device by sending a MIDI message.
+    fn _disable_daw_mode(&mut self) -> Result<(), midir::SendError> {
+        println!("Disabling DAW Mode");
+        self._send_bytes(DISABLE_DAW_MODE.to_vec())
+    }
+
+    /// Sends a MIDI command to the Launchkey.
+    fn _send_command(&mut self, command: LaunchkeyCommand) -> Result<(), midir::SendError> {
+        self._send_bytes(command.as_bytes(&self.sku))
+    }
+
+    /// Sends raw byte command to the Launchkey.
+    fn _send_bytes(&mut self, bytes: Vec<u8>) -> Result<(), midir::SendError> {
+        let hex_string = self.bytes_to_hex_string(&bytes);
+        println!("Sending MIDI message: {}", hex_string);
+        self.conn_out.borrow_mut().send(&bytes)?;
+        Ok(())
+    }
+}
+
+impl LaunchkeyManager<StandaloneMode> {
     /// Creates a new LaunchkeyManager and connects to the specified output port.
     pub fn new(
         midi_out: MidiOutput,
@@ -23,9 +75,10 @@ impl LaunchkeyManager {
             .connect(port, "launchkey-manager")
             .map_err(|_| "Failed to connect to MIDI output".to_string())?;
         Ok(Self {
-            conn_out,
+            conn_out: Rc::new(RefCell::new(conn_out)),
             sku,
             in_daw_drum_mode: false,
+            state: PhantomData,
         })
     }
 
@@ -54,78 +107,90 @@ impl LaunchkeyManager {
         Self::new(midi_out, out_port, LaunchKeySku::Mini)
     }
 
-    /// Sends a MIDI command to the Launchkey.
-    pub fn send_command(&mut self, command: LaunchKeyCommand) -> Result<(), midir::SendError> {
-        let bytes = command.as_bytes(&self.sku);
-        // Print the bytes in hexadecimal format
-        let mut hex_string = String::new();
-        for byte in &bytes {
-            let _ = &hex_string.write_str(&format!("{:02X} ", byte));
-        }
-        println!("Sending MIDI message: {}", hex_string.trim_end());
-        self.conn_out.send(&bytes)?;
+    /// The only command allowed in Standalone Mode; sets global screen text.
+    pub fn set_screen_text_global(
+        &mut self,
+        target: GlobalDisplayTarget,
+        arrangement: Arrangement,
+    ) -> Result<(), midir::SendError> {
+        self._send_command(LaunchkeyCommand::SetScreenTextGlobal {
+            target,
+            arrangement,
+        })
+    }
+
+    /// Enables DAW Mode and transitions the manager to DAW mode.
+    pub fn into_daw_mode(mut self) -> Result<LaunchkeyManager<DAWMode>, midir::SendError> {
+        self._enable_daw_mode()?;
+        Ok(LaunchkeyManager {
+            conn_out: self.conn_out.clone(),
+            sku: self.sku.clone(),
+            in_daw_drum_mode: self.in_daw_drum_mode,
+            state: PhantomData,
+        })
+    }
+}
+
+impl LaunchkeyManager<DAWMode> {
+    /// Disables DAW Mode and transitions the manager to Standalone mode.
+    pub fn into_standalone_mode(
+        mut self,
+    ) -> Result<LaunchkeyManager<StandaloneMode>, midir::SendError> {
+        self._disable_daw_mode()?;
+        Ok(LaunchkeyManager {
+            conn_out: self.conn_out.clone(),
+            sku: self.sku.clone(),
+            in_daw_drum_mode: self.in_daw_drum_mode,
+            state: PhantomData,
+        })
+    }
+
+    /// Sets the default mode for the Pads, Encoders and Faders on the Launchkey.
+    pub fn setup_default_element_modes(&mut self) -> Result<(), midir::SendError> {
+        self.send_command(LaunchkeyCommand::SetPadMode(PadMode::DAW))?;
+        self.send_command(LaunchkeyCommand::SetEncoderMode(EncoderMode::Plugin))?;
+        self.send_command(LaunchkeyCommand::SetFaderMode(FaderMode::Volume))?;
+
         Ok(())
+    }
+
+    /// Sends a MIDI command to the Launchkey.
+    pub fn send_command(&mut self, command: LaunchkeyCommand) -> Result<(), midir::SendError> {
+        self._send_command(command)
     }
 
     /// Sends multiple MIDI commands to the Launchkey.
-    pub fn send_commands(
-        &mut self,
-        commands: &[LaunchKeyCommand],  // A slice of commands
-    ) -> Result<(), midir::SendError> {
+    pub fn send_commands(&mut self, commands: &[LaunchkeyCommand]) -> Result<(), midir::SendError> {
         for command in commands {
-            let bytes = command.as_bytes(&self.sku);
-
-            // Print the bytes in hexadecimal format
-            let mut hex_string = String::new();
-            for byte in &bytes {
-                let _ = &hex_string.write_str(&format!("{:02X} ", byte));
-            }
-            println!("Sending MIDI message: {}", hex_string.trim_end());
-
-            // Send the command
-            self.conn_out.send(&bytes)?;
+            self._send_command((*command).clone())?;
         }
-        Ok(())  // Return Ok if all commands are successfully sent
-    }
-
-    /// Sets up DAW mode on the Launchkey.
-    pub fn setup_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self.send_command(LaunchKeyCommand::EnableDAWMode)?;
-        self.send_command(LaunchKeyCommand::SetPadMode(PadMode::DAW))?;
-        self.send_command(LaunchKeyCommand::SetEncoderMode(EncoderMode::Plugin))?;
-        self.send_command(LaunchKeyCommand::SetFaderMode(FaderMode::Volume))?;
-
-        Ok(())
-    }
-
-    /// Disables DAW mode on the Launchkey.
-    pub fn disable_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self.send_command(LaunchKeyCommand::DisableDAWMode)
+        Ok(()) // Return Ok if all commands are successfully sent
     }
 
     /// Switch the Launchkey to DAW Drum Mode
-    pub fn enable_daw_drum_mode(&mut self) -> Result<(), midir::SendError> {
-        let message = [0xB6, 0x54, 0x01]; // Channel 7, CC 84, Value 1
-        self.conn_out.send(&message)?;
+    pub fn enable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
+        self._send_bytes(ENABLE_DRUM_DAW_MODE.to_vec())?;
         self.in_daw_drum_mode = true;
-        println!("Enabled DAW Drum Mode");
+        println!("Enabled Drum DAW  Mode");
         Ok(())
     }
 
     /// Switch the Launchkey back to Standalone Drum Mode
-    pub fn disable_daw_drum_mode(&mut self) -> Result<(), midir::SendError> {
-        let message = [0xB6, 0x54, 0x00]; // Channel 7, CC 84, Value 0
-        self.conn_out.send(&message)?;
+    pub fn disable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
+        self._send_bytes(DISABLE_DRUM_DAW_MODE.to_vec())?;
         self.in_daw_drum_mode = false;
-        println!("Disabled DAW Drum Mode (returned to Standalone)");
+        println!("Disabled Drum DAW Mode (returned to Standalone)");
         Ok(())
     }
 }
 
-impl Drop for LaunchkeyManager {
+impl<S: LaunchKeyState + 'static> Drop for LaunchkeyManager<S> {
     fn drop(&mut self) {
-        if let Err(err) = self.disable_daw_mode() {
-            eprintln!("Failed to disable DAW mode during cleanup: {}", err);
+        // Check if the current type is DawMode
+        if TypeId::of::<S>() == TypeId::of::<DAWMode>() {
+            if let Err(err) = self._disable_daw_mode() {
+                eprintln!("Failed to disable DAW mode during cleanup: {}", err);
+            }
         }
     }
 }

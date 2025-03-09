@@ -1,9 +1,9 @@
+use crate::midi::to_hex::ToHexString;
 use midir::{MidiInput, MidiInputConnection};
-use std::sync::mpsc;
-use wmidi::MidiMessage;
 use std::io;
 use std::io::Write;
-use crate::midi::to_hex::ToHexString;
+use std::sync::mpsc;
+use wmidi::MidiMessage;
 
 pub fn list_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
     midi_in
@@ -65,13 +65,27 @@ pub fn connect_to_port(
 pub fn log_midi_message(message: MidiMessage) {
     match message {
         MidiMessage::NoteOff(_, note, _) => println!("Note Off: {}", note),
-        MidiMessage::NoteOn(_, note, velocity) => println!("Note On: {} (Velocity: {:?})", note, velocity),
-        MidiMessage::PolyphonicKeyPressure(_, note, velocity) => println!("Polyphonic Key Pressure: {} (Velocity: {:?})", note, velocity),
-        MidiMessage::ControlChange(_, control_function, value) => println!("Control Change: Controller {:?} Value {:?}", control_function, value),
-        MidiMessage::ProgramChange(_, program_number) => println!("Program Change: Program {:?}", program_number),
-        MidiMessage::ChannelPressure(channel, velocity) => println!("Channel Pressure: {:?} (Velocity: {:?})", channel, velocity),
+        MidiMessage::NoteOn(_, note, velocity) => {
+            println!("Note On: {} (Velocity: {:?})", note, velocity)
+        }
+        MidiMessage::PolyphonicKeyPressure(_, note, velocity) => println!(
+            "Polyphonic Key Pressure: {} (Velocity: {:?})",
+            note, velocity
+        ),
+        MidiMessage::ControlChange(_, control_function, value) => println!(
+            "Control Change: Controller {:?} Value {:?}",
+            control_function, value
+        ),
+        MidiMessage::ProgramChange(_, program_number) => {
+            println!("Program Change: Program {:?}", program_number)
+        }
+        MidiMessage::ChannelPressure(channel, velocity) => {
+            println!("Channel Pressure: {:?} (Velocity: {:?})", channel, velocity)
+        }
         MidiMessage::PitchBendChange(_, pitch_bend) => println!("Pitch Bend: {:?}", pitch_bend),
-        MidiMessage::SysEx(data) => { println!("SysEx Message: {}", data.to_hex_string()); }
+        MidiMessage::SysEx(data) => {
+            println!("SysEx Message: {}", data.to_hex_string());
+        }
         _ => {}
     }
 }

@@ -1,22 +1,24 @@
 use ctrlc;
 use launchkey_sdk::launchkey::colors::CommonColor;
-use launchkey_sdk::launchkey::commands::LaunchKeyCommand;
+use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
-use launchkey_sdk::launchkey::surface::display::{GlobalDisplayTarget, Arrangement, ContextualDisplayTarget, ModeNameTarget, TemporaryTarget};
+use launchkey_sdk::launchkey::surface::display::{
+    Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget, TemporaryTarget,
+};
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
+use launchkey_sdk::midi::input;
 use launchkey_sdk::midi::input::{connect_to_port, list_midi_ports};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 use wmidi::MidiMessage;
-use launchkey_sdk::midi::input;
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
-    let mut launchkey_manager = match LaunchkeyManager::default() {
+    let launchkey_manager = match LaunchkeyManager::default() {
         Ok(manager) => manager,
         Err(err) => {
             println!("Error setting up LaunchkeyManager: {}", err);
@@ -25,14 +27,17 @@ fn main() {
     };
 
     // Set up DAW mode
-    if let Err(err) = launchkey_manager.setup_daw_mode() {
-        println!("Error setting up DAW mode: {}", err);
-        return;
-    }
+    let mut launchkey_manager = match launchkey_manager.into_daw_mode() {
+        Ok(daw_manager) => daw_manager,
+        Err(err) => {
+            println!("Error setting up DAW mode: {}", err);
+            return;
+        }
+    };
 
     // Set Play Button brightness
     launchkey_manager
-        .send_command(LaunchKeyCommand::SetButtonBrightness {
+        .send_command(LaunchkeyCommand::SetButtonBrightness {
             launch_key_button: LaunchKeyButton::Mini(MiniButton::Play),
             brightness: Brightness::max(),
         })
@@ -41,7 +46,7 @@ fn main() {
     // Set a pads LED to green
     for pad in Pad::all() {
         launchkey_manager
-            .send_command(LaunchKeyCommand::SetPadColor {
+            .send_command(LaunchkeyCommand::SetPadColor {
                 pad_in_mode: PadInMode::DAW(pad),
                 mode: LEDMode::Stationary,
                 color_palette_index: CommonColor::BrightGreen.into(),
@@ -51,18 +56,18 @@ fn main() {
 
     // Set a pad's LED to custom RGB color
     launchkey_manager
-        .send_command(LaunchKeyCommand::SetPadCustomColor {
+        .send_command(LaunchkeyCommand::SetPadCustomColor {
             pad_in_mode: PadInMode::DAW(Pad::PlugIn),
             color: CommonColor::BrightCyan.into(),
         })
         .unwrap();
 
     // Enable DAW Drum Mode
-    launchkey_manager.enable_daw_drum_mode().unwrap();
+    launchkey_manager.enable_drum_daw_mode().unwrap();
 
     // Set a pad to HighGreen in DAW Drum Mode
     launchkey_manager
-        .send_command(LaunchKeyCommand::SetPadColor {
+        .send_command(LaunchkeyCommand::SetPadColor {
             pad_in_mode: PadInMode::Drum(Pad::Mixer),
             mode: LEDMode::Stationary,
             color_palette_index: CommonColor::BrightRed.into(),
@@ -70,30 +75,27 @@ fn main() {
         .unwrap();
 
     // Configure and set text on the screen
-    launchkey_manager.send_command(
-        LaunchKeyCommand::SetScreenTextGlobal {
+    launchkey_manager
+        .send_command(LaunchkeyCommand::SetScreenTextGlobal {
             target: GlobalDisplayTarget::Stationary,
             arrangement: Arrangement::NameValue(
                 "Custom DAW".to_string(),
-                "Hello, World!".to_string()
-            )
-        }
-    ).unwrap();
+                "Hello, World!".to_string(),
+            ),
+        })
+        .unwrap();
 
-    launchkey_manager.send_command(
-        LaunchKeyCommand::SetScreenTextGlobal {
+    launchkey_manager
+        .send_command(LaunchkeyCommand::SetScreenTextGlobal {
             target: GlobalDisplayTarget::Temporary,
-            arrangement: Arrangement::NameValue(
-                "Custom DAW".to_string(),
-                "Temporary".to_string()
-            )
-        }
-    ).unwrap();
+            arrangement: Arrangement::NameValue("Custom DAW".to_string(), "Temporary".to_string()),
+        })
+        .unwrap();
 
     // Customize names for all encoders
     for (index, encoder) in Encoder::all().enumerate() {
         launchkey_manager
-            .send_command(LaunchKeyCommand::SetScreenTextContextual {
+            .send_command(LaunchkeyCommand::SetScreenTextContextual {
                 target: ContextualDisplayTarget::Temporary(TemporaryTarget::Encoder(encoder)),
                 text: format!("Custom Encoder {}", index + 1),
             })
@@ -103,7 +105,7 @@ fn main() {
     // Customizing PAD mode names
     for mode_name_target in ModeNameTarget::all() {
         launchkey_manager
-            .send_command(LaunchKeyCommand::SetScreenTextContextual {
+            .send_command(LaunchkeyCommand::SetScreenTextContextual {
                 target: ContextualDisplayTarget::ModeName(mode_name_target),
                 text: format!("Custom {}", mode_name_target),
             })
@@ -115,7 +117,7 @@ fn main() {
     bitmap_data = bitmap_data.map(|_e| 0x12);
     // Populate the bitmap_data array with your custom bitmap
     launchkey_manager
-        .send_command(LaunchKeyCommand::SendScreenBitmap {
+        .send_command(LaunchkeyCommand::SendScreenBitmap {
             target: GlobalDisplayTarget::Temporary,
             bitmap_data,
         })
@@ -167,7 +169,7 @@ fn main() {
                     input::log_midi_message(event);
                 }
             } // Process the received MIDI event
-            Err(mpsc::TryRecvError::Empty) => {}   // No message available, continue looping
+            Err(mpsc::TryRecvError::Empty) => {} // No message available, continue looping
             Err(mpsc::TryRecvError::Disconnected) => {
                 println!("MIDI channel disconnected.");
                 break; // Exit the loop if the channel is closed
@@ -176,10 +178,5 @@ fn main() {
 
         // Optionally, add a small sleep to avoid busy-waiting
         std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-
-    // Explicitly disable DAW mode before dropping the cleanup guard
-    if let Err(err) = launchkey_manager.disable_daw_mode() {
-        eprintln!("Failed to disable DAW mode during cleanup: {}", err);
     }
 }

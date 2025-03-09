@@ -1,18 +1,18 @@
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{
-    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
-    SYSEX_TERMINATOR,
+    LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR,
 };
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
 use crate::launchkey::surface::buttons::{Brightness, LaunchKeyButton};
-use crate::launchkey::surface::display::{GlobalDisplayTarget, Arrangement, ContextualDisplayTarget, DisplayConfig, DisplayTarget};
+use crate::launchkey::surface::display::{
+    Arrangement, ContextualDisplayTarget, DisplayConfig, DisplayTarget, GlobalDisplayTarget,
+};
 use crate::launchkey::surface::pads::{LEDMode, PadInMode};
 
-pub enum LaunchKeyCommand {
-    EnableDAWMode,
-    DisableDAWMode,
+#[derive(Debug, Clone)]
+pub enum LaunchkeyCommand {
     SetPadMode(PadMode),
     SetEncoderMode(EncoderMode),
     SetFaderMode(FaderMode),
@@ -43,16 +43,14 @@ pub enum LaunchKeyCommand {
     },
 }
 
-impl LaunchKeyCommand {
+impl LaunchkeyCommand {
     pub(crate) fn as_bytes(&self, sku: &LaunchKeySku) -> Vec<u8> {
         let header = sku.sys_ex_header();
         match self {
-            LaunchKeyCommand::EnableDAWMode => ENABLE_DAW_MODE.to_vec(),
-            LaunchKeyCommand::DisableDAWMode => DISABLE_DAW_MODE.to_vec(),
-            LaunchKeyCommand::SetPadMode(mode) => mode.as_bytes(),
-            LaunchKeyCommand::SetEncoderMode(mode) => mode.as_bytes(),
-            LaunchKeyCommand::SetFaderMode(mode) => mode.as_bytes(),
-            LaunchKeyCommand::SetButtonBrightness {
+            LaunchkeyCommand::SetPadMode(mode) => mode.as_bytes(),
+            LaunchkeyCommand::SetEncoderMode(mode) => mode.as_bytes(),
+            LaunchkeyCommand::SetFaderMode(mode) => mode.as_bytes(),
+            LaunchkeyCommand::SetButtonBrightness {
                 launch_key_button,
                 brightness,
             } => {
@@ -63,7 +61,7 @@ impl LaunchKeyCommand {
                 ]
             }
             // Commands for pad LEDs
-            LaunchKeyCommand::SetPadColor {
+            LaunchkeyCommand::SetPadColor {
                 pad_in_mode,
                 mode,
                 color_palette_index,
@@ -75,7 +73,7 @@ impl LaunchKeyCommand {
                     color_palette_index.as_u8(),
                 ]
             }
-            LaunchKeyCommand::SetPadCustomColor { pad_in_mode, color } => {
+            LaunchkeyCommand::SetPadCustomColor { pad_in_mode, color } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[
                     0x01,
@@ -90,45 +88,89 @@ impl LaunchKeyCommand {
             }
 
             // Commands for screen control
-            LaunchKeyCommand::SetScreenTextGlobal { target, arrangement } => {
+            LaunchkeyCommand::SetScreenTextGlobal {
+                target,
+                arrangement,
+            } => {
                 let mut data: Vec<u8> = Vec::new();
                 // Start with configuring the display for the arrangement
-                data.extend(configure_display((*target).into(), DisplayConfig::Arrangement(arrangement.clone()), sku));
+                data.extend(self.configure_display(
+                    (*target).into(),
+                    DisplayConfig::Arrangement(arrangement.clone()),
+                    sku,
+                ));
 
                 // Handle different arrangement types
                 match arrangement {
                     Arrangement::NameValue(name, value) => {
-                        data.extend(set_screen_text((*target).into(), 0, name.to_string(), sku));
-                        data.extend(set_screen_text((*target).into(), 1, value.to_string(), sku));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            0,
+                            name.to_string(),
+                            sku,
+                        ));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            1,
+                            value.to_string(),
+                            sku,
+                        ));
                     }
                     Arrangement::TitleNameValue(title, name, value) => {
-                        data.extend(set_screen_text((*target).into(), 0, title.to_string(), sku));
-                        data.extend(set_screen_text((*target).into(), 1, name.to_string(), sku));
-                        data.extend(set_screen_text((*target).into(), 2, value.to_string(), sku));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            0,
+                            title.to_string(),
+                            sku,
+                        ));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            1,
+                            name.to_string(),
+                            sku,
+                        ));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            2,
+                            value.to_string(),
+                            sku,
+                        ));
                     }
                     Arrangement::TitleEightNames(title, names) => {
-                        data.extend(set_screen_text((*target).into(), 0, title.to_string(), sku));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            0,
+                            title.to_string(),
+                            sku,
+                        ));
                         for (i, name) in names.iter().enumerate() {
-                            data.extend(set_screen_text((*target).into(), (i + 1) as u8, name.to_string(), sku));
+                            data.extend(self.set_screen_text(
+                                (*target).into(),
+                                (i + 1) as u8,
+                                name.to_string(),
+                                sku,
+                            ));
                         }
                     }
                     Arrangement::NameNumericValue(name) => {
-                        data.extend(set_screen_text((*target).into(), 0, name.to_string(), sku));
+                        data.extend(self.set_screen_text(
+                            (*target).into(),
+                            0,
+                            name.to_string(),
+                            sku,
+                        ));
                     }
                 }
 
                 // Finalize with configuring the display for triggering
-                data.extend(configure_display((*target).into(), DisplayConfig::Trigger, sku));
+                data.extend(self.configure_display((*target).into(), DisplayConfig::Trigger, sku));
 
                 data
             }
-            LaunchKeyCommand::SetScreenTextContextual {
-                target,
-                text
-            } => {
-                set_screen_text((*target).into(), 0, text.to_string(), sku)
+            LaunchkeyCommand::SetScreenTextContextual { target, text } => {
+                self.set_screen_text((*target).into(), 0, text.to_string(), sku)
             }
-            LaunchKeyCommand::SendScreenBitmap {
+            LaunchkeyCommand::SendScreenBitmap {
                 target,
                 bitmap_data,
             } => {
@@ -140,29 +182,29 @@ impl LaunchKeyCommand {
             }
         }
     }
-}
+    fn configure_display(
+        &self,
+        target: DisplayTarget,
+        config: DisplayConfig,
+        sku: &LaunchKeySku,
+    ) -> Vec<u8> {
+        let mut data = sku.sys_ex_header().to_vec();
+        data.extend_from_slice(&[0x04, target.into(), config.clone().into()]);
+        data.push(SYSEX_TERMINATOR);
+        data
+    }
 
-fn configure_display(
-    target: DisplayTarget,
-    config: DisplayConfig,
-    sku: &LaunchKeySku,
-) -> Vec<u8> {
-    let mut data = sku.sys_ex_header().to_vec();
-    data.extend_from_slice(&[0x04, target.into(), config.clone().into()]);
-    data.push(SYSEX_TERMINATOR);
-    data
-}
-
-fn set_screen_text(
-    target: DisplayTarget,
-    field: u8,
-    text: String,
-    sku: &LaunchKeySku,
-) -> Vec<u8>
-{
-    let mut data = sku.sys_ex_header().to_vec();
-    data.extend_from_slice(&[0x06, target.into(), field]);
-    data.extend(text.as_bytes());
-    data.push(SYSEX_TERMINATOR);
-    data
+    fn set_screen_text(
+        &self,
+        target: DisplayTarget,
+        field: u8,
+        text: String,
+        sku: &LaunchKeySku,
+    ) -> Vec<u8> {
+        let mut data = sku.sys_ex_header().to_vec();
+        data.extend_from_slice(&[0x06, target.into(), field]);
+        data.extend(text.as_bytes());
+        data.push(SYSEX_TERMINATOR);
+        data
+    }
 }

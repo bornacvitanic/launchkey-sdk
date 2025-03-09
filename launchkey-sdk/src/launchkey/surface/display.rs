@@ -1,7 +1,7 @@
-use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
 use crate::launchkey::surface::encoders::Encoder;
 use crate::launchkey::surface::faders::Fader;
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -22,7 +22,7 @@ impl From<DisplayTarget> for u8 {
 #[derive(Debug, Clone, Copy)]
 pub enum GlobalDisplayTarget {
     Stationary,
-    Temporary
+    Temporary,
 }
 
 impl From<GlobalDisplayTarget> for DisplayTarget {
@@ -43,7 +43,7 @@ impl From<GlobalDisplayTarget> for u8 {
 #[derive(Debug, Clone, Copy)]
 pub enum ContextualDisplayTarget {
     Temporary(TemporaryTarget),
-    ModeName(ModeNameTarget)
+    ModeName(ModeNameTarget),
 }
 
 impl From<ContextualDisplayTarget> for DisplayTarget {
@@ -72,14 +72,14 @@ impl From<ContextualDisplayTarget> for u8 {
 #[derive(Debug, Clone, Copy)]
 pub enum TemporaryTarget {
     Encoder(Encoder),
-    Fader(Fader)
+    Fader(Fader),
 }
 
 impl From<TemporaryTarget> for u8 {
     fn from(temporary_target: TemporaryTarget) -> Self {
         match temporary_target {
             TemporaryTarget::Encoder(encoder) => encoder.to_index(true),
-            TemporaryTarget::Fader(fader) => fader.to_index()
+            TemporaryTarget::Fader(fader) => fader.to_index(),
         }
     }
 }
@@ -122,10 +122,10 @@ pub enum DisplayConfig {
 
 #[derive(Debug, Clone)]
 pub enum Arrangement {
-    NameValue(String, String),         // (name, value)
-    TitleNameValue(String, String, String),  // (title, name, value)
-    TitleEightNames(String, [String; 8]),    // (title, eight names)
-    NameNumericValue(String),    // (name)
+    NameValue(String, String),              // (name, value)
+    TitleNameValue(String, String, String), // (title, name, value)
+    TitleEightNames(String, [String; 8]),   // (title, eight names)
+    NameNumericValue(String),               // (name)
 }
 
 impl From<DisplayConfig> for u8 {
@@ -133,9 +133,9 @@ impl From<DisplayConfig> for u8 {
         match config {
             DisplayConfig::Cancel => 0x00,
             DisplayConfig::Arrangement(arrangement) => match arrangement {
-                Arrangement::NameValue(_,_) => 0x01,
-                Arrangement::TitleNameValue(_,_,_) => 0x02,
-                Arrangement::TitleEightNames(_,_) => 0x03,
+                Arrangement::NameValue(_, _) => 0x01,
+                Arrangement::TitleNameValue(_, _, _) => 0x02,
+                Arrangement::TitleEightNames(_, _) => 0x03,
                 Arrangement::NameNumericValue(_) => 0x04,
             },
             DisplayConfig::Trigger => 0x7F,
