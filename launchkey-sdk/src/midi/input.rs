@@ -64,17 +64,17 @@ pub fn connect_to_port(
 
 pub fn log_midi_message(message: MidiMessage) {
     match message {
-        MidiMessage::NoteOff(_, note, _) => println!("Note Off: {}", note),
-        MidiMessage::NoteOn(_, note, velocity) => {
-            println!("Note On: {} (Velocity: {:?})", note, velocity)
+        MidiMessage::NoteOff(channel, note, _) => println!("Note Off: {:?} {}", channel, note),
+        MidiMessage::NoteOn(channel, note, velocity) => {
+            println!("Note On: {:?} {} (Velocity: {:?})", channel, note, velocity)
         }
         MidiMessage::PolyphonicKeyPressure(_, note, velocity) => println!(
             "Polyphonic Key Pressure: {} (Velocity: {:?})",
             note, velocity
         ),
-        MidiMessage::ControlChange(_, control_function, value) => println!(
-            "Control Change: Controller {:?} Value {:?}",
-            control_function, value
+        MidiMessage::ControlChange(channel, control_function, value) => println!(
+            "Control Change: {:?} Controller {:?} Value {:?}",
+            channel, control_function, value
         ),
         MidiMessage::ProgramChange(_, program_number) => {
             println!("Program Change: Program {:?}", program_number)
