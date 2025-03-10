@@ -65,9 +65,7 @@ fn main() {
         .unwrap();
 
     // Enable DAW Drum Mode
-    launchkey_manager
-        .send_command(LaunchkeyCommand::SetPadMode(PadMode::DrumDAW))
-        .unwrap();
+    launchkey_manager.send_command(LaunchkeyCommand::SetDrumDAWMode(true)).unwrap();
 
     // Set a pad to HighGreen in DAW Drum Mode
     launchkey_manager

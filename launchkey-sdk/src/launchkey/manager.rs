@@ -1,7 +1,7 @@
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::commands::LaunchkeyCommand;
 use crate::launchkey::constants::{
-    LaunchKeySku, DISABLE_DAW_MODE, DISABLE_DRUM_DAW_MODE, ENABLE_DAW_MODE, ENABLE_DRUM_DAW_MODE,
+    LaunchKeySku, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
 };
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
@@ -55,8 +55,8 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
         match command {
             LaunchkeyCommand::SetPadMode(ref pad_mode) => {
                 match pad_mode {
-                    PadMode::Drum => self._send_bytes(DISABLE_DRUM_DAW_MODE.to_vec()),
-                    PadMode::DrumDAW => self._send_bytes(ENABLE_DRUM_DAW_MODE.to_vec()),
+                    PadMode::Drum => self._send_command(LaunchkeyCommand::SetDrumDAWMode(true)),
+                    PadMode::DrumDAW => self._send_command(LaunchkeyCommand::SetDrumDAWMode(false)),
                     _ => Ok({}),
                 }?;
                 self._send_bytes(command.as_bytes(&self.sku))
@@ -181,22 +181,6 @@ impl LaunchkeyManager<DAWMode> {
             self._send_command((*command).clone())?;
         }
         Ok(()) // Return Ok if all commands are successfully sent
-    }
-
-    /// Switch the Launchkey to DAW Drum Mode
-    pub fn enable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self._send_bytes(ENABLE_DRUM_DAW_MODE.to_vec())?;
-        self.in_daw_drum_mode = true;
-        println!("Enabled Drum DAW  Mode");
-        Ok(())
-    }
-
-    /// Switch the Launchkey back to Standalone Drum Mode
-    pub fn disable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self._send_bytes(DISABLE_DRUM_DAW_MODE.to_vec())?;
-        self.in_daw_drum_mode = false;
-        println!("Disabled Drum DAW Mode (returned to Standalone)");
-        Ok(())
     }
 }
 
