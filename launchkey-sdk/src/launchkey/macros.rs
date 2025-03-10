@@ -31,7 +31,7 @@ macro_rules! bidirectional_enum_mappings_with_mode {
     // With custom mode enum name (mode is required)
     ($name:ident, $type:ty, $mode_name:ident, { $($mode:ident => {$($variant:ident => $value:expr),* $(,)?}),* $(,)? }) => {
         // Mode enum
-        #[derive(Debug)]
+        #[derive(Debug, Clone, Copy)]
         pub enum $mode_name {
             $($mode),*
         }
@@ -61,6 +61,15 @@ macro_rules! bidirectional_enum_mappings_with_mode {
                             _ => return None
                         }),
                     )*
+                }
+            }
+
+            pub fn from_value(value: $type) -> Option<($name, $mode_name)> {
+                match value {
+                    $(
+                        $( $value => Some(($name::$variant, $mode_name::$mode)), )*
+                    )*
+                    _ => None,
                 }
             }
         }
