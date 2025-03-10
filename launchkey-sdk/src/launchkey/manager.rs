@@ -182,22 +182,6 @@ impl LaunchkeyManager<DAWMode> {
         }
         Ok(()) // Return Ok if all commands are successfully sent
     }
-
-    /// Switch the Launchkey to DAW Drum Mode
-    pub fn enable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self._send_bytes(ENABLE_DRUM_DAW_MODE.to_vec())?;
-        self.in_daw_drum_mode = true;
-        println!("Enabled Drum DAW  Mode");
-        Ok(())
-    }
-
-    /// Switch the Launchkey back to Standalone Drum Mode
-    pub fn disable_drum_daw_mode(&mut self) -> Result<(), midir::SendError> {
-        self._send_bytes(DISABLE_DRUM_DAW_MODE.to_vec())?;
-        self.in_daw_drum_mode = false;
-        println!("Disabled Drum DAW Mode (returned to Standalone)");
-        Ok(())
-    }
 }
 
 impl<S: LaunchKeyState + 'static> Drop for LaunchkeyManager<S> {
