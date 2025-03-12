@@ -75,3 +75,49 @@ macro_rules! bidirectional_enum_mappings_with_mode {
         }
     };
 }
+
+#[macro_export]
+macro_rules! bidirectional_enum_mappings_with_existing_mode {
+    ($name:ident, $type:ty, $mode_name:ident, { $($mode:ident => { $($variant:ident => $value:expr),* $(,)? }),* $(,)? }) => {
+        impl $name {
+            // Maps enum variant to value based on mode
+            pub fn to_value_mode(&self, mode: $mode_name) -> $type {
+                match mode {
+                    $(
+                        $mode_name::$mode => match self {
+                            $(
+                                $name::$variant => $value,
+                            )*
+                        },
+                    )*
+                }
+            }
+
+            // Maps value back to enum variant based on mode
+            pub fn from_value_mode(value: $type, mode: $mode_name) -> Option<$name> {
+                match mode {
+                    $(
+                        $mode_name::$mode => Some(match value {
+                            $(
+                                $value => $name::$variant,
+                            )*
+                            _ => return None,
+                        }),
+                    )*
+                }
+            }
+
+            // Find enum variant and its mode from a value
+            pub fn from_value(value: $type) -> Option<($name, $mode_name)> {
+                match value {
+                    $(
+                        $(
+                            $value => Some(($name::$variant, $mode_name::$mode)),
+                        )*
+                    )*
+                    _ => None,
+                }
+            }
+        }
+    };
+}
