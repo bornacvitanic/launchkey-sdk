@@ -120,7 +120,7 @@ fn main() {
     launchkey_manager
         .send_command(LaunchkeyCommand::SendScreenBitmap {
             target: GlobalDisplayTarget::Temporary,
-            bitmap,
+            bitmap: Box::new(bitmap),
         })
         .unwrap();
 

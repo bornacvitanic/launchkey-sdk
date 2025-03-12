@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::colors::{Color, ColorPaletteIndex};
 use crate::launchkey::constants::{LaunchKeySku, BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL, SYSEX_TERMINATOR, CC_CH7, PAD_MODE_CC, ENCODER_MODE_CC, FADER_MODE_CC, BITMAP_HEADER_BYTE, CUSTOM_COLOR_COMMAND, CONFIGURE_DISPLAY_COMMAND, SET_SCREEN_TEXT_COMMAND, ENABLE_DRUM_DAW_MODE, DISABLE_DRUM_DAW_MODE};
@@ -39,7 +40,7 @@ pub enum LaunchkeyCommand {
     },
     SendScreenBitmap {
         target: GlobalDisplayTarget,
-        bitmap: LaunchkeyBitmap,
+        bitmap: Box<LaunchkeyBitmap>,
     },
 }
 
@@ -174,7 +175,7 @@ impl LaunchkeyCommand {
             LaunchkeyCommand::SendScreenBitmap { target, bitmap } => {
                 let mut data = header.to_vec();
                 data.extend_from_slice(&[BITMAP_HEADER_BYTE, (*target).into()]);
-                data.extend_from_slice(bitmap.as_ref());
+                data.extend_from_slice(bitmap.deref().as_ref());
                 data.push(SYSEX_TERMINATOR);
                 data
             }

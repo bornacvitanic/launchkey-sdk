@@ -134,7 +134,7 @@ impl LaunchkeyManager<StandaloneMode> {
         target: GlobalDisplayTarget,
         bitmap: LaunchkeyBitmap,
     ) -> Result<(), midir::SendError> {
-        self._send_command(LaunchkeyCommand::SendScreenBitmap { target, bitmap })
+        self._send_command(LaunchkeyCommand::SendScreenBitmap { target, bitmap: Box::new(bitmap) })
     }
 
     /// Enables DAW Mode and transitions the manager to DAW mode.
