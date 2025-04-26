@@ -67,7 +67,7 @@ pub fn log_midi_message(message: MidiMessage) {
         MidiMessage::NoteOff(channel, note, _) => println!("Note Off: {:?} {}", channel, note),
         MidiMessage::NoteOn(channel, note, velocity) => {
             println!("Note On: {:?} {} (Velocity: {:?})", channel, note, velocity)
-        }
+        },
         MidiMessage::PolyphonicKeyPressure(_, note, velocity) => println!(
             "Polyphonic Key Pressure: {} (Velocity: {:?})",
             note, velocity
@@ -78,14 +78,17 @@ pub fn log_midi_message(message: MidiMessage) {
         ),
         MidiMessage::ProgramChange(_, program_number) => {
             println!("Program Change: Program {:?}", program_number)
-        }
+        },
         MidiMessage::ChannelPressure(channel, velocity) => {
             println!("Channel Pressure: {:?} (Velocity: {:?})", channel, velocity)
-        }
+        },
         MidiMessage::PitchBendChange(_, pitch_bend) => println!("Pitch Bend: {:?}", pitch_bend),
         MidiMessage::SysEx(data) => {
             println!("SysEx Message: {}", data.to_hex_string());
-        }
+        },
+        MidiMessage::Start => println!("Start"),
+        MidiMessage::Continue => println!("Continue"),
+        MidiMessage::Stop => println!("Stop"),
         _ => {}
     }
 }
