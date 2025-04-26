@@ -1,8 +1,6 @@
 use crate::launchkey::bitmap::LaunchkeyBitmap;
 use crate::launchkey::commands::LaunchkeyCommand;
-use crate::launchkey::constants::{
-    LaunchKeySku, DISABLE_DAW_MODE, ENABLE_DAW_MODE,
-};
+use crate::launchkey::constants::{LaunchKeySku, DISABLE_DAW_MODE, ENABLE_DAW_MODE};
 use crate::launchkey::modes::encoder_mode::EncoderMode;
 use crate::launchkey::modes::fader_mode::FaderMode;
 use crate::launchkey::modes::pad_mode::PadMode;
@@ -134,7 +132,10 @@ impl LaunchkeyManager<StandaloneMode> {
         target: GlobalDisplayTarget,
         bitmap: LaunchkeyBitmap,
     ) -> Result<(), midir::SendError> {
-        self._send_command(LaunchkeyCommand::SendScreenBitmap { target, bitmap: Box::new(bitmap) })
+        self._send_command(LaunchkeyCommand::SendScreenBitmap {
+            target,
+            bitmap: Box::new(bitmap),
+        })
     }
 
     /// Enables DAW Mode and transitions the manager to DAW mode.

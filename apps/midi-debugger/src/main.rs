@@ -2,23 +2,23 @@ use ctrlc;
 use launchkey_sdk::launchkey::bitmap::LaunchkeyBitmap;
 use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
+use launchkey_sdk::launchkey::constants::{ENCODER_MODE_CC, PAD_MODE_CC};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
+use launchkey_sdk::launchkey::modes::encoder_mode::EncoderMode;
 use launchkey_sdk::launchkey::modes::pad_mode::PadMode;
 use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
 use launchkey_sdk::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget, TemporaryTarget,
 };
-use launchkey_sdk::launchkey::surface::encoders::{Encoder};
+use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
+use launchkey_sdk::midi::input;
 use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 use wmidi::{Channel, MidiMessage, U7};
-use launchkey_sdk::launchkey::constants::{ENCODER_MODE_CC, PAD_MODE_CC};
-use launchkey_sdk::launchkey::modes::encoder_mode::EncoderMode;
-use launchkey_sdk::midi::input;
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
@@ -67,7 +67,9 @@ fn main() {
         .unwrap();
 
     // Enable DAW Drum Mode
-    launchkey_manager.send_command(LaunchkeyCommand::SetDrumDAWMode(true)).unwrap();
+    launchkey_manager
+        .send_command(LaunchkeyCommand::SetDrumDAWMode(true))
+        .unwrap();
 
     // Set a pad to HighGreen in DAW Drum Mode
     launchkey_manager
@@ -187,35 +189,27 @@ fn main() {
 fn interpret_launchkey_midi(message: MidiMessage) {
     match message {
         MidiMessage::ControlChange(_, control_function, value)
-        if control_function.0 == U7::from_u8_lossy(ENCODER_MODE_CC) =>
-            {
-                println!(
-                    "Encoder Mode Change: {:?}",
-                    EncoderMode::from_value(value.into())
-                );
-            }
+            if control_function.0 == U7::from_u8_lossy(ENCODER_MODE_CC) =>
+        {
+            println!(
+                "Encoder Mode Change: {:?}",
+                EncoderMode::from_value(value.into())
+            );
+        }
 
         MidiMessage::ControlChange(Channel::Ch16, control_function, value)
-        if Encoder::from_value(control_function.0.into()).is_some() =>
-            {
-                if let Some((encoder, mode)) = Encoder::from_value(control_function.0.into()) {
-                    println!(
-                        "{:?} ({:?}) Value Change: {:?}",
-                        encoder,
-                        mode,
-                        value
-                    );
-                }
+            if Encoder::from_value(control_function.0.into()).is_some() =>
+        {
+            if let Some((encoder, mode)) = Encoder::from_value(control_function.0.into()) {
+                println!("{:?} ({:?}) Value Change: {:?}", encoder, mode, value);
             }
+        }
 
         MidiMessage::ControlChange(_, control_function, value)
-        if control_function.0 == U7::from_u8_lossy(PAD_MODE_CC) =>
-            {
-                println!(
-                    "Pad Mode Change: {:?}",
-                    PadMode::from_value(value.into())
-                );
-            }
+            if control_function.0 == U7::from_u8_lossy(PAD_MODE_CC) =>
+        {
+            println!("Pad Mode Change: {:?}", PadMode::from_value(value.into()));
+        }
 
         MidiMessage::NoteOn(_, note, _) => {
             if let Some((pad, mode)) = Pad::from_value(note as u8) {
