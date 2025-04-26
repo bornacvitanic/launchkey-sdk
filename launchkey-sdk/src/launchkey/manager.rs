@@ -55,7 +55,7 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
                 match pad_mode {
                     PadMode::Drum => self._send_command(LaunchkeyCommand::SetDrumDAWMode(true)),
                     PadMode::DrumDAW => self._send_command(LaunchkeyCommand::SetDrumDAWMode(false)),
-                    _ => Ok({}),
+                    _ => Ok(()),
                 }?;
                 self._send_bytes(command.as_bytes(&self.sku))
             }

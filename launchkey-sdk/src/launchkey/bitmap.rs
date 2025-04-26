@@ -50,9 +50,9 @@ impl TryFrom<&[u8]> for LaunchkeyBitmap {
     }
 }
 
-impl Into<[u8; 1216]> for LaunchkeyBitmap {
-    fn into(self) -> [u8; 1216] {
-        self.0
+impl From<LaunchkeyBitmap> for [u8; 1216] {
+    fn from(val: LaunchkeyBitmap) -> Self {
+        val.0
     }
 }
 

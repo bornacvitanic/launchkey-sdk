@@ -1,4 +1,3 @@
-use ctrlc;
 use launchkey_sdk::launchkey::bitmap::LaunchkeyBitmap;
 use launchkey_sdk::launchkey::colors::CommonColor;
 use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
