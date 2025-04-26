@@ -8,15 +8,17 @@ use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, Mi
 use launchkey_sdk::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget, TemporaryTarget,
 };
-use launchkey_sdk::launchkey::surface::encoders::Encoder;
+use launchkey_sdk::launchkey::surface::encoders::{Encoder};
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
-use launchkey_sdk::midi::input;
 use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
-use wmidi::MidiMessage;
+use wmidi::{Channel, MidiMessage, U7};
+use launchkey_sdk::launchkey::constants::{ENCODER_MODE_CC, PAD_MODE_CC};
+use launchkey_sdk::launchkey::modes::encoder_mode::EncoderMode;
+use launchkey_sdk::midi::input;
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
@@ -166,7 +168,8 @@ fn main() {
         match rx.try_recv() {
             Ok(data) => {
                 if let Ok(event) = MidiMessage::try_from(data.as_slice()) {
-                    input::log_midi_message(event);
+                    input::log_midi_message(event.clone());
+                    interpret_launchkey_midi(event)
                 }
             } // Process the received MIDI event
             Err(mpsc::TryRecvError::Empty) => {} // No message available, continue looping
@@ -178,5 +181,48 @@ fn main() {
 
         // Optionally, add a small sleep to avoid busy-waiting
         std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
+
+fn interpret_launchkey_midi(message: MidiMessage) {
+    match message {
+        MidiMessage::ControlChange(_, control_function, value)
+        if control_function.0 == U7::from_u8_lossy(ENCODER_MODE_CC) =>
+            {
+                println!(
+                    "Encoder Mode Change: {:?}",
+                    EncoderMode::from_value(value.into())
+                );
+            }
+
+        MidiMessage::ControlChange(Channel::Ch16, control_function, value)
+        if Encoder::from_value(control_function.0.into()).is_some() =>
+            {
+                if let Some((encoder, mode)) = Encoder::from_value(control_function.0.into()) {
+                    println!(
+                        "{:?} ({:?}) Value Change: {:?}",
+                        encoder,
+                        mode,
+                        value
+                    );
+                }
+            }
+
+        MidiMessage::ControlChange(_, control_function, value)
+        if control_function.0 == U7::from_u8_lossy(PAD_MODE_CC) =>
+            {
+                println!(
+                    "Pad Mode Change: {:?}",
+                    PadMode::from_value(value.into())
+                );
+            }
+
+        MidiMessage::NoteOn(_, note, _) => {
+            if let Some((pad, mode)) = Pad::from_value(note as u8) {
+                println!("Pad: {:?}, Mode: {:?}", pad, mode);
+            }
+        }
+
+        _ => {}
     }
 }
