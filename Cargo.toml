@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "launchkey-sdk",  # Library crate
-    "apps/midi-debugger",  # Application crate
+    "apps/midi-debugger", "apps/melodics-companion",  # Application crate
 ]
 resolver = "2"

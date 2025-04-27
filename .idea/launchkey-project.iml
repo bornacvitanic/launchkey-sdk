@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/apps/midi-debugger/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/launchkey-sdk/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/apps/melodics-companion/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
