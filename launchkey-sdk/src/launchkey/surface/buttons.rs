@@ -1,49 +1,136 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RegularButton {
-    Shift = 0x3F,
-    PreviousTrack = 0x67,
-    NextTrack = 0x66,
-    EncoderMoveUp = 0x33,
-    EncoderMoveDown = 0x34,
-    PadBankUp = 0x6A,
-    PadBankDown = 0x6B,
-    SceneLaunch = 0x68,
-    Function = 0x69,
-    CaptureMIDI = 0x4A,
-    UndoRedo = 0x4D,
-    Quantise = 0x4B,
-    Metronome = 0x4C,
-    Stop = 0x74,
-    Loop = 0x76,
-    Play = 0x73,
-    Record = 0x75,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MiniButton {
-    Shift = 0x3F,
-    Play = 0x73,
-    Record = 0x75,
-    EncoderMoveUp = 0x33,
-    EncoderMoveDown = 0x34,
-    PadBankUp = 0x6A,
-    PadBankDown = 0x6B,
-    SceneLaunch = 0x68,
-    Function = 0x69,
-}
+use std::ops::Deref;
+use crate::bidirectional_enum_mappings;
+use wmidi::ControlValue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LaunchKeyButton {
-    Regular(RegularButton),
-    Mini(MiniButton),
+    Shift,
+    PreviousTrack,
+    NextTrack,
+    EncoderMoveUp,
+    EncoderMoveDown,
+    PadBankUp,
+    PadBankDown,
+    SceneLaunch,
+    Function,
+    CaptureMIDI,
+    UndoRedo,
+    Quantise,
+    Metronome,
+    Stop,
+    Loop,
+    Play,
+    Record,
 }
 
-impl LaunchKeyButton {
-    /// Get the correct button index based on whether it's a Regular or Mini Launchkey
-    pub fn to_index(self) -> u8 {
-        match self {
-            LaunchKeyButton::Regular(regular_button) => regular_button as u8,
-            LaunchKeyButton::Mini(mini_button) => mini_button as u8,
+bidirectional_enum_mappings!(LaunchKeyButton, u8, {
+    Shift => 0x3F,
+    PreviousTrack => 0x67,
+    NextTrack => 0x66,
+    EncoderMoveUp => 0x33,
+    EncoderMoveDown => 0x34,
+    PadBankUp => 0x6A,
+    PadBankDown => 0x6B,
+    SceneLaunch => 0x68,
+    Function => 0x69,
+    CaptureMIDI => 0x4A,
+    UndoRedo => 0x4D,
+    Quantise => 0x4B,
+    Metronome => 0x4C,
+    Stop => 0x74,
+    Loop => 0x76,
+    Play => 0x73,
+    Record => 0x75,
+});
+
+// Wrapper for Mini LaunchKey buttons, containing only the subset of buttons
+pub struct MiniLaunchKeyButton(pub LaunchKeyButton);
+
+impl MiniLaunchKeyButton {
+    pub const SUPPORTED: [LaunchKeyButton; 9] = [
+        LaunchKeyButton::Shift,
+        LaunchKeyButton::Play,
+        LaunchKeyButton::Record,
+        LaunchKeyButton::EncoderMoveUp,
+        LaunchKeyButton::EncoderMoveDown,
+        LaunchKeyButton::PadBankUp,
+        LaunchKeyButton::PadBankDown,
+        LaunchKeyButton::SceneLaunch,
+        LaunchKeyButton::Function,
+    ];
+
+    pub fn from_launchkey_button(button: LaunchKeyButton) -> Option<Self> {
+        if Self::SUPPORTED.contains(&button) {
+            Some(MiniLaunchKeyButton(button))
+        } else {
+            None
+        }
+    }
+}
+
+impl Deref for MiniLaunchKeyButton {
+    type Target = LaunchKeyButton;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// Wrapper for Regular LaunchKey buttons, containing all buttons
+pub struct RegularLaunchKeyButton(pub LaunchKeyButton);
+
+impl RegularLaunchKeyButton {
+    pub const SUPPORTED: [LaunchKeyButton; 17] = [
+        LaunchKeyButton::Shift,
+        LaunchKeyButton::PreviousTrack,
+        LaunchKeyButton::NextTrack,
+        LaunchKeyButton::EncoderMoveUp,
+        LaunchKeyButton::EncoderMoveDown,
+        LaunchKeyButton::PadBankUp,
+        LaunchKeyButton::PadBankDown,
+        LaunchKeyButton::SceneLaunch,
+        LaunchKeyButton::Function,
+        LaunchKeyButton::CaptureMIDI,
+        LaunchKeyButton::UndoRedo,
+        LaunchKeyButton::Quantise,
+        LaunchKeyButton::Metronome,
+        LaunchKeyButton::Stop,
+        LaunchKeyButton::Loop,
+        LaunchKeyButton::Play,
+        LaunchKeyButton::Record,
+    ];
+
+    pub fn from_launchkey_button(button: LaunchKeyButton) -> Option<Self> {
+        if Self::SUPPORTED.contains(&button) {
+            Some(RegularLaunchKeyButton(button))
+        } else {
+            None
+        }
+    }
+}
+
+impl Deref for RegularLaunchKeyButton {
+    type Target = LaunchKeyButton;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ButtonState {
+    Pressed,
+    Released,
+}
+
+impl TryFrom<ControlValue> for ButtonState {
+    type Error = ();
+
+    fn try_from(value: ControlValue) -> Result<Self, Self::Error> {
+        match value.into() {
+            127 => Ok(ButtonState::Pressed),
+            0 => Ok(ButtonState::Released),
+            _ => Err(()),
         }
     }
 }

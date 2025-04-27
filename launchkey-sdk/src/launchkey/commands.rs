@@ -70,7 +70,7 @@ impl LaunchkeyCommand {
             } => {
                 vec![
                     BUTTON_BRIGHTNESS_OVERRIDE_CHANNEL,
-                    (*launch_key_button).to_index(),
+                    (*launch_key_button).to_value(),
                     brightness.value(),
                 ]
             }

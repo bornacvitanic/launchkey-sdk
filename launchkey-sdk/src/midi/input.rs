@@ -3,7 +3,7 @@ use midir::{MidiInput, MidiInputConnection};
 use std::io;
 use std::io::Write;
 use std::sync::mpsc;
-use wmidi::MidiMessage;
+use wmidi::{ControlFunction, MidiMessage, U7};
 
 pub fn get_named_midi_ports(midi_in: &MidiInput) -> Vec<(usize, String)> {
     midi_in
@@ -90,5 +90,15 @@ pub fn log_midi_message(message: MidiMessage) {
         MidiMessage::Continue => println!("Continue"),
         MidiMessage::Stop => println!("Stop"),
         _ => {}
+    }
+}
+
+pub trait ControlFunctionExt {
+    fn equals_u8(&self, value: u8) -> bool;
+}
+
+impl ControlFunctionExt for ControlFunction {
+    fn equals_u8(&self, value: u8) -> bool {
+        self.0 == U7::from_u8_lossy(value)
     }
 }

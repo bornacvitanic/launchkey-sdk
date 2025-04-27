@@ -5,19 +5,19 @@ use launchkey_sdk::launchkey::constants::{ENCODER_MODE_CC, PAD_MODE_CC};
 use launchkey_sdk::launchkey::manager::LaunchkeyManager;
 use launchkey_sdk::launchkey::modes::encoder_mode::EncoderMode;
 use launchkey_sdk::launchkey::modes::pad_mode::PadMode;
-use launchkey_sdk::launchkey::surface::buttons::{Brightness, LaunchKeyButton, MiniButton};
+use launchkey_sdk::launchkey::surface::buttons::{Brightness, ButtonState, LaunchKeyButton};
 use launchkey_sdk::launchkey::surface::display::{
     Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget, TemporaryTarget,
 };
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input;
-use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
+use launchkey_sdk::midi::input::{connect_to_port, ControlFunctionExt, get_named_midi_ports};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
-use wmidi::{Channel, MidiMessage, U7};
+use wmidi::{Channel, MidiMessage};
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
@@ -41,7 +41,7 @@ fn main() {
     // Set Play Button brightness
     launchkey_manager
         .send_command(LaunchkeyCommand::SetButtonBrightness {
-            launch_key_button: LaunchKeyButton::Mini(MiniButton::Play),
+            launch_key_button: LaunchKeyButton::Play,
             brightness: Brightness::max(),
         })
         .unwrap();
@@ -187,8 +187,24 @@ fn main() {
 
 fn interpret_launchkey_midi(message: MidiMessage) {
     match message {
+        MidiMessage::ControlChange(Channel::Ch1, control_function, value) => {
+            if let Some(button) = LaunchKeyButton::from_value(control_function.0.into()) {
+                let state = match ButtonState::try_from(value) {
+                    Ok(state) => state,
+                    Err(_) => {
+                        println!(
+                            "Launchkey Button: {:?} Unknown ControlValue: {:?}",
+                            button, value
+                        );
+                        return;
+                    }
+                };
+                println!("Launchkey Button: {:?} State: {:?}", button, state);
+            }
+        }
+
         MidiMessage::ControlChange(_, control_function, value)
-            if control_function.0 == U7::from_u8_lossy(ENCODER_MODE_CC) =>
+            if control_function.equals_u8(ENCODER_MODE_CC) =>
         {
             println!(
                 "Encoder Mode Change: {:?}",
@@ -205,7 +221,7 @@ fn interpret_launchkey_midi(message: MidiMessage) {
         }
 
         MidiMessage::ControlChange(_, control_function, value)
-            if control_function.0 == U7::from_u8_lossy(PAD_MODE_CC) =>
+            if control_function.equals_u8(PAD_MODE_CC) =>
         {
             println!("Pad Mode Change: {:?}", PadMode::from_value(value.into()));
         }
