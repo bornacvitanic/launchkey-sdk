@@ -80,7 +80,7 @@ bidirectional_enum_mappings_with_mode!(
             PadCustom1 => 0x2C,
             PadCustom2 => 0x2D,
             PadCustom3 => 0x2E,
-            PadCustom4 => 0x7F
+            PadCustom4 => 0x2F
         }
     }
 );
