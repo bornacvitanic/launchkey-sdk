@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/launchkey-sdk.svg)](https://crates.io/crates/launchkey-sdk)
 [![Download](https://img.shields.io/badge/download-releases-blue.svg)](https://github.com/bornacvitanic/launchkey-sdk/releases)
+[![Docs.rs](https://img.shields.io/docsrs/launchkey-sdk)](https://docs.rs/launchkey-sdk)
 
 ![Novation Launchkey](https://www.rockitdistribution.com/wp-content/uploads/2025/02/LAUNCHKEY-MK4-full-range-web-banner.png)
 
