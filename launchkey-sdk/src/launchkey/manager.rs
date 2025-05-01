@@ -26,16 +26,6 @@ pub struct LaunchkeyManager<S: LaunchKeyState + 'static> {
 }
 
 impl<S: LaunchKeyState> LaunchkeyManager<S> {
-    /// Converts a slice of bytes into a formatted hexadecimal string.
-    fn bytes_to_hex_string(&self, bytes: &[u8]) -> String {
-        bytes
-            .iter()
-            .map(|byte| format!("{:02X} ", byte))
-            .collect::<String>()
-            .trim_end() // Remove trailing space
-            .to_string()
-    }
-
     /// Enables DAW mode on the Launchkey device by sending a MIDI message.
     fn _enable_daw_mode(&mut self) -> Result<(), midir::SendError> {
         println!("Enabling DAW Mode");
@@ -65,8 +55,7 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
 
     /// Sends raw byte command to the Launchkey.
     fn _send_bytes(&mut self, bytes: Vec<u8>) -> Result<(), midir::SendError> {
-        let hex_string = self.bytes_to_hex_string(&bytes);
-        println!("Sending MIDI message: {}", hex_string);
+        println!("Sending MIDI message: {}", &bytes.to_hex_string());
         self.conn_out.borrow_mut().send(&bytes)?;
         Ok(())
     }
