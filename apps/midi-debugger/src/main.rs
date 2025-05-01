@@ -13,7 +13,7 @@ use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input;
 use launchkey_sdk::midi::input::{connect_to_port, ControlFunctionExt, get_named_midi_ports};
-use midir::{Ignore, MidiInput, MidiInputConnection};
+use midir::{Ignore, MidiInput};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -21,22 +21,16 @@ use wmidi::{Channel, MidiMessage};
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
-    let launchkey_manager = match LaunchkeyManager::default() {
-        Ok(manager) => manager,
-        Err(err) => {
-            println!("Error setting up LaunchkeyManager: {}", err);
-            return;
-        }
-    };
+    let launchkey_manager = LaunchkeyManager::default().unwrap_or_else(|err| {
+        println!("Error setting up LaunchkeyManager: {}", err);
+        std::process::exit(1);
+    });
 
     // Set up DAW mode
-    let mut launchkey_manager = match launchkey_manager.into_daw_mode() {
-        Ok(daw_manager) => daw_manager,
-        Err(err) => {
-            println!("Error setting up DAW mode: {}", err);
-            return;
-        }
-    };
+    let mut launchkey_manager = launchkey_manager.into_daw_mode().unwrap_or_else(|err| {
+        println!("Error setting up DAW mode: {}", err);
+        std::process::exit(1);
+    });
 
     // Set Play Button brightness
     launchkey_manager
@@ -133,20 +127,12 @@ fn main() {
     let midi_in = MidiInput::new("MIDI Listener").unwrap();
     let ports = get_named_midi_ports(&midi_in);
 
-    let mut connections: Vec<MidiInputConnection<()>> = vec![];
-    for (i, name) in ports.iter() {
-        let mut midi_in = MidiInput::new(&format!("{} Listener", name)).unwrap();
-        midi_in.ignore(Ignore::None);
-        // Connect to the selected port
-        let _conn_in = match connect_to_port(midi_in, *i, tx.clone()) {
-            Ok(conn) => conn,
-            Err(err) => {
-                println!("Error: {}", err);
-                continue;
-            }
-        };
-        connections.push(_conn_in);
-    }
+    let _connections: Vec<_> =
+        ports.iter().filter_map(|(i, name)| {
+            let mut midi_in = MidiInput::new(&format!("{} Listener", name)).ok()?;
+            midi_in.ignore(Ignore::None);
+            connect_to_port(midi_in, *i, tx.clone()).ok()
+        }).collect();
 
     println!("Listening for MIDI messages...");
 

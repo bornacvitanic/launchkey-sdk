@@ -1,7 +1,7 @@
 use launchkey_sdk::launchkey::manager::{DAWMode, LaunchkeyManager};
 use launchkey_sdk::launchkey::surface::buttons::{ButtonState, LaunchKeyButton};
 use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
-use midir::{Ignore, MidiInput, MidiInputConnection};
+use midir::{Ignore, MidiInput};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -67,20 +67,12 @@ fn main() {
     let midi_in = MidiInput::new("MIDI Listener").unwrap();
     let ports = get_named_midi_ports(&midi_in);
 
-    let mut connections: Vec<MidiInputConnection<()>> = vec![];
-    for (i, name) in ports.iter() {
-        let mut midi_in = MidiInput::new(&format!("{} Listener", name)).unwrap();
-        midi_in.ignore(Ignore::None);
-        // Connect to the selected port
-        let _conn_in = match connect_to_port(midi_in, *i, tx.clone()) {
-            Ok(conn) => conn,
-            Err(err) => {
-                println!("Error: {}", err);
-                continue;
-            }
-        };
-        connections.push(_conn_in);
-    }
+    let _connections: Vec<_> =
+        ports.iter().filter_map(|(i, name)| {
+            let mut midi_in = MidiInput::new(&format!("{} Listener", name)).ok()?;
+            midi_in.ignore(Ignore::None);
+            connect_to_port(midi_in, *i, tx.clone()).ok()
+        }).collect();
 
     println!("Listening for MIDI messages...");
 
