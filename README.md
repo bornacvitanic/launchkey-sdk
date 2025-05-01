@@ -15,10 +15,14 @@ It provides complete programmatic control over **pads**, **encoders**, **faders*
 
 The SDK is designed to support both Standalone and DAW mode operations, includes RGB color and bitmap display support, and is built for portability across platforms.
 
-## Technical Reference
+### ⚠️ Disclaimer & Technical Reference
 
-This SDK is based on the official [Launchkey MK4 Programmer’s Reference Guide (PDF)](https://fael-downloads-prod.focusrite.com/customer/prod/downloads/launchkey_mk4_programmer_s_reference_guide_v2_en.pdf) provided by Novation/Focusrite.  
-It maps all known SysEx, CC, and control behavior as specified in the guide.
+> This project is an **unofficial**, **independently developed** SDK for Novation Launchkey MIDI controllers.  
+> It is **not affiliated with, endorsed by, or supported by Novation or Focusrite**.
+
+The SDK is based on the official [Launchkey MK4 Programmer’s Reference Guide (PDF)](https://fael-downloads-prod.focusrite.com/customer/prod/downloads/launchkey_mk4_programmer_s_reference_guide_v2_en.pdf) provided by Novation.  
+It maps all known SysEx, CC, and control behavior as documented in that guide.
+
 
 ## Features
 
