@@ -1,5 +1,5 @@
 [![Test](https://github.com/bornacvitanic/launchkey-sdk/actions/workflows/rust.yml/badge.svg)](https://github.com/bornacvitanic/launchkey-sdk/actions/workflows/rust.yml)
-[![dependency status](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk/status.svg)](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk)
+[![dependency status](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk/status.svg?path=launchkey-sdk)](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk?path=launchkey-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/launchkey-sdk.svg)](https://crates.io/crates/launchkey-sdk)
 [![Download](https://img.shields.io/badge/download-releases-blue.svg)](https://github.com/bornacvitanic/launchkey-sdk/releases)
