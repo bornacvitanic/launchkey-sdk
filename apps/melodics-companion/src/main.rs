@@ -115,18 +115,10 @@ fn main() {
     }
 }
 
+#[derive(Default)]
 pub struct AppState {
     left_pads: Vec<Pad>,
     right_pads: Vec<Pad>,
-}
-
-impl AppState {
-    pub fn default() -> Self {
-        Self {
-            left_pads: Vec::new(),
-            right_pads: Vec::new(),
-        }
-    }
 }
 
 fn handle_button_presses(message: MidiMessage, enigo: &mut Enigo, app_state: &mut AppState, mut launchkey_manager: &mut LaunchkeyManager<DAWMode>) {
