@@ -4,6 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/launchkey-sdk.svg)](https://crates.io/crates/launchkey-sdk)
 [![Download](https://img.shields.io/badge/download-releases-blue.svg)](https://github.com/bornacvitanic/launchkey-sdk/releases)
 
+![Novation Launchkey](https://www.rockitdistribution.com/wp-content/uploads/2025/02/LAUNCHKEY-MK4-full-range-web-banner.png)
 
 # Launchkey SDK
 
