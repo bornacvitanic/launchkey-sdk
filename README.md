@@ -115,25 +115,84 @@ launchkey-sdk = "0.1.0"
 ```
 
 ## Getting Started
-Example code:
-```rust
-use launchkey_sdk::launchkey::manager::LaunchkeyManager;
-use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
-use launchkey_sdk::launchkey::colors::CommonColor;
 
+### 1. **Initialize Launchkey Manager and Set DAW Mode**
+```rust
 fn main() {
-    // Initialize Launchkey manager
-    let mut manager = LaunchkeyManager::default().unwrap();  
-    // Enter DAW mode
-    let mut manager = manager.into_daw_mode().unwrap();  
-    // Set pad colors
-    manager.send_command(LaunchkeyCommand::SetPadColor {
-        pad_in_mode: PadInMode::DAW(Pad::Mixer),
-        mode: LEDMode::Stationary,
-        color_palette_index: CommonColor::BrightGreen.into(),
-    }).unwrap();
+  let mut manager = LaunchkeyManager::default().unwrap();  
+  let mut manager = manager.into_daw_mode().unwrap();
 }
 ```
+
+### 2. **Set Pad Color**
+```rust
+fn main() {
+  //...
+  manager.send_command(LaunchkeyCommand::SetPadColor {
+      pad_in_mode: PadInMode::DAW(Pad::Mixer),
+      mode: LEDMode::Stationary,
+      color_palette_index: CommonColor::BrightGreen.into(),
+  }).unwrap();
+}
+```
+
+### 3. **Set Encoder Mode**
+```rust
+fn main() {
+  //...
+  manager.send_command(LaunchkeyCommand::SetEncoderMode {
+      mode: EncoderMode::Normal,
+  }).unwrap();
+}
+```
+
+### 4. **Set Screen Text**
+```rust
+fn main() {
+  //...
+  manager.send_command(LaunchkeyCommand::SetScreenTextGlobal {
+      target: GlobalDisplayTarget::Stationary,
+      arrangement: Arrangement::NameValue("DAW Mode".to_string(), "Ready".to_string()),
+  }).unwrap();
+}
+```
+
+### 5. **React to MIDI Launchkey interactions**
+```rust
+fn main() {
+  let (tx, rx) = mpsc::channel();
+  let midi_in = MidiInput::new("MIDI Listener").unwrap();
+  let ports = get_named_midi_ports(&midi_in);
+
+  // Connect to all available MIDI ports
+  let _connections = connect_all_midi_ports(&ports, tx.clone());
+  
+  loop {
+    if let Ok(data) = rx.recv() {
+      if let Ok(event) = MidiMessage::try_from(data.as_slice()) {
+        match event {
+          // Recognize Pad Press
+          MidiMessage::NoteOn(_, note, _) => {
+            if let Some((pad, mode)) = Pad::from_value(note as u8) {
+              println!("Pad {:?} pressed in mode {:?}", pad, mode);
+            }
+          }
+
+          // Recognize Pad Mode Change
+          MidiMessage::ControlChange(_, control_function, value)
+          if control_function.equals_u8(PAD_MODE_CC) =>
+            {
+              println!("Pad Mode Changed: {:?}", PadMode::from_value(value.into()));
+            }
+
+          _ => {}
+        }
+      }
+    }
+  }
+}
+```
+
 
 ## API Highlights
 - `LaunchkeyManager`: Handles MIDI communication and device state
