@@ -1,18 +1,20 @@
+use enigo::{Direction, Enigo, Keyboard};
+use launchkey_sdk::launchkey::colors::CommonColor;
+use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
 use launchkey_sdk::launchkey::manager::{DAWMode, LaunchkeyManager};
+use launchkey_sdk::launchkey::modes::pad_mode::PadMode;
 use launchkey_sdk::launchkey::surface::buttons::{ButtonState, LaunchKeyButton};
+use launchkey_sdk::launchkey::surface::display::{
+    Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget,
+};
+use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadCCIndex, PadInMode};
+use launchkey_sdk::midi::input;
 use launchkey_sdk::midi::input::{connect_all_midi_ports, get_named_midi_ports};
-use midir::{MidiInput};
+use midir::MidiInput;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
-use enigo::{Direction, Enigo, Keyboard};
 use wmidi::{Channel, MidiMessage};
-use launchkey_sdk::launchkey::colors::CommonColor;
-use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
-use launchkey_sdk::launchkey::modes::pad_mode::PadMode;
-use launchkey_sdk::launchkey::surface::display::{Arrangement, ContextualDisplayTarget, GlobalDisplayTarget, ModeNameTarget};
-use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadCCIndex, PadInMode};
-use launchkey_sdk::midi::input;
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
@@ -36,8 +38,8 @@ fn main() {
         .unwrap();
 
     // Default to Pad Drum mode
-    launchkey_manager.
-        send_command(LaunchkeyCommand::SetPadMode(PadMode::DrumDAW))
+    launchkey_manager
+        .send_command(LaunchkeyCommand::SetPadMode(PadMode::DrumDAW))
         .unwrap();
 
     for pad in Pad::all() {
@@ -54,10 +56,7 @@ fn main() {
     launchkey_manager
         .send_command(LaunchkeyCommand::SetScreenTextGlobal {
             target: GlobalDisplayTarget::Stationary,
-            arrangement: Arrangement::NameValue(
-                "Melodics".to_string(),
-                "Companion".to_string(),
-            ),
+            arrangement: Arrangement::NameValue("Melodics".to_string(), "Companion".to_string()),
         })
         .unwrap();
 
@@ -79,7 +78,7 @@ fn main() {
         running_clone.store(false, Ordering::SeqCst);
         println!("Exiting...");
     })
-        .expect("Error setting Ctrl+C handler");
+    .expect("Error setting Ctrl+C handler");
 
     let mut enigo = Enigo::new(&Default::default()).unwrap();
 
@@ -115,13 +114,27 @@ pub struct AppState {
     right_pads: Vec<Pad>,
 }
 
-fn handle_button_presses(message: MidiMessage, enigo: &mut Enigo, app_state: &mut AppState, mut launchkey_manager: &mut LaunchkeyManager<DAWMode>) {
+fn handle_button_presses(
+    message: MidiMessage,
+    enigo: &mut Enigo,
+    app_state: &mut AppState,
+    mut launchkey_manager: &mut LaunchkeyManager<DAWMode>,
+) {
     match message {
         MidiMessage::ControlChange(Channel::Ch1, control_function, value) => {
-            match (LaunchKeyButton::from_value(control_function.0.into()), ButtonState::try_from(value)) {
-                (Some(LaunchKeyButton::Play), Ok(ButtonState::Pressed)) => enigo.key(enigo::Key::Space, Direction::Click).unwrap(),
-                (Some(LaunchKeyButton::Record), Ok(ButtonState::Pressed)) => enigo.key(enigo::Key::Escape, Direction::Click).unwrap(),
-                (Some(LaunchKeyButton::SceneLaunch), Ok(ButtonState::Pressed)) => enigo.key(enigo::Key::Return, Direction::Click).unwrap(),
+            match (
+                LaunchKeyButton::from_value(control_function.0.into()),
+                ButtonState::try_from(value),
+            ) {
+                (Some(LaunchKeyButton::Play), Ok(ButtonState::Pressed)) => {
+                    enigo.key(enigo::Key::Space, Direction::Click).unwrap()
+                }
+                (Some(LaunchKeyButton::Record), Ok(ButtonState::Pressed)) => {
+                    enigo.key(enigo::Key::Escape, Direction::Click).unwrap()
+                }
+                (Some(LaunchKeyButton::SceneLaunch), Ok(ButtonState::Pressed)) => {
+                    enigo.key(enigo::Key::Return, Direction::Click).unwrap()
+                }
                 _ => {}
             }
         }
@@ -156,16 +169,23 @@ fn handle_button_presses(message: MidiMessage, enigo: &mut Enigo, app_state: &mu
     }
 }
 
-pub fn set_pad_color( launchkey_manager: &mut LaunchkeyManager<DAWMode>, pad: Pad, color: CommonColor) {
+pub fn set_pad_color(
+    launchkey_manager: &mut LaunchkeyManager<DAWMode>,
+    pad: Pad,
+    color: CommonColor,
+) {
     launchkey_manager
-        .send_commands(&[LaunchkeyCommand::SetPadColor {
-            pad_in_mode: PadInMode::DAW(pad),
-            mode: LEDMode::Flashing,
-            color_palette_index: color.into(),
-        }, LaunchkeyCommand::SetPadColor {
-            pad_in_mode: PadInMode::Drum(pad),
-            mode: LEDMode::Stationary,
-            color_palette_index: color.into(),
-        }])
+        .send_commands(&[
+            LaunchkeyCommand::SetPadColor {
+                pad_in_mode: PadInMode::DAW(pad),
+                mode: LEDMode::Flashing,
+                color_palette_index: color.into(),
+            },
+            LaunchkeyCommand::SetPadColor {
+                pad_in_mode: PadInMode::Drum(pad),
+                mode: LEDMode::Stationary,
+                color_palette_index: color.into(),
+            },
+        ])
         .unwrap();
 }

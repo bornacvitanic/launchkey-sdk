@@ -12,8 +12,10 @@ use launchkey_sdk::launchkey::surface::display::{
 use launchkey_sdk::launchkey::surface::encoders::Encoder;
 use launchkey_sdk::launchkey::surface::pads::{LEDMode, Pad, PadInMode};
 use launchkey_sdk::midi::input;
-use launchkey_sdk::midi::input::{connect_all_midi_ports, ControlFunctionExt, get_named_midi_ports};
-use midir::{MidiInput};
+use launchkey_sdk::midi::input::{
+    connect_all_midi_ports, get_named_midi_ports, ControlFunctionExt,
+};
+use midir::MidiInput;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;

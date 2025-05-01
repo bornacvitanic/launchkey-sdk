@@ -1,5 +1,5 @@
-use std::ops::Deref;
 use crate::bidirectional_enum_mappings;
+use std::ops::Deref;
 use wmidi::ControlValue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
