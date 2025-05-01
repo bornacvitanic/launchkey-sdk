@@ -1,0 +1,161 @@
+[![Test](https://github.com/bornacvitanic/launchkey-sdk/actions/workflows/rust.yml/badge.svg)](https://github.com/bornacvitanic/launchkey-sdk/actions/workflows/rust.yml)
+[![dependency status](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk/status.svg)](https://deps.rs/repo/github/bornacvitanic/launchkey-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Crates.io](https://img.shields.io/crates/v/launchkey-sdk.svg)](https://crates.io/crates/launchkey-sdk)
+[![Download](https://img.shields.io/badge/download-releases-blue.svg)](https://github.com/bornacvitanic/launchkey-sdk/releases)
+
+
+# Launchkey SDK
+
+`launchkey-sdk` is a type-safe Rust SDK for **Novation Launchkey** MIDI controllers.\
+Novation provides a detailed programmer's guide for their MIDI protocol, but no official library exists — this SDK fills that gap with a complete, ergonomic, and extensible solution in Rust.
+
+It provides complete programmatic control over **pads**, **encoders**, **faders**, **screen(s)**, and more. Whether you're building custom DAW integrations, stage tools, or creative MIDI workflows, this SDK gives you low-level access with high-level ergonomics.
+
+The SDK is designed to support both Standalone and DAW mode operations, includes RGB color and bitmap display support, and is built for portability across platforms.
+
+## Technical Reference
+
+This SDK is based on the official [Launchkey MK4 Programmer’s Reference Guide (PDF)](https://fael-downloads-prod.focusrite.com/customer/prod/downloads/launchkey_mk4_programmer_s_reference_guide_v2_en.pdf) provided by Novation/Focusrite.  
+It maps all known SysEx, CC, and control behavior as specified in the guide.
+
+## Features
+
+### 🎛️ Control Surfaces
+- Change encoder, fader, and pad modes
+- DAW/Drum mode toggling
+- Set pad colors (stationary, flashing, pulsing)
+- Customize button brightness
+- Send raw or structured MIDI commands
+
+### 🖼️ Display Output
+- Send 128x64 monochrome bitmaps to the onboard screen
+- Write multi-line text with predefined arrangements
+- Contextual and global display targets
+
+### 🌈 Color Utilities
+- Use predefined `CommonColor` variants
+- Convert full-range (0–255) or palette-range (97–255) RGB values to 0–127
+- Create and map RGB values to palette indices
+
+---
+
+## Supported Devices
+
+| Model             | Regular  | Mini     |
+|-------------------|----------|----------|
+| Launchkey MK4     | ✅       | ✅       |
+| Launchkey MK3     | ❌       | ❌       |
+| Launchkey MK2     | ❌       | ❌       |
+
+---
+
+## Roadmap
+
+- [ ] **Launchkey MK3 Support**  
+  Add support for older MK3 devices with their unique SysEx and CC mappings.
+
+- [ ] **Launchkey MK2 Support**  
+  Add support for older MK2 devices with their unique SysEx and CC mappings.
+
+- [ ] **Bitmap Composition Utilities**  
+  Add text/image/sprite rendering support into `LaunchkeyBitmap`, including:
+    - Font rasterization
+    - Shape drawing (lines, boxes, etc.)
+    - Icon compositing and asset embedding
+
+- [ ] **Custom Pad Layout Mapping**  
+  User-defined pad banks and aliases for dynamic page switching and alternate grid mappings.
+
+- [ ] **Preset Management API**  
+  Load/save pad layouts, colors, fader modes, and display state as named user presets.
+
+- [ ] **Remember Active Pad/Encoder/Fader Mode State**  
+  Implement functionality to remember the state of the active pad, encoder, and fader mode, even across session resets.
+
+- [ ] **Support for Multiple/Virtual Modes**  
+  Enable support for multiple or virtual modes, including:
+    - Infinite encoder banks for expanded control options.
+    - Multiple pad sub-modes for deeper interaction, such as different layers or sets of controls within one physical mode.
+
+- [ ] **CLI Tool (`launchkey-cli`)**  
+  A separate command-line interface for sending test commands, bitmaps, display updates, etc.
+
+- [ ] **Auto Hotplug Detection**  
+  Automatically reconnect or react to device plug/unplug events on supported platforms.
+
+### Example Gallery
+
+- [x] **MIDI Monitor**  
+  Log all incoming MIDI messages, highlighting Launchkey-specific controls like encoders, faders, and pads.
+
+- [ ] **Visual Metronome**  
+  Flash a pad or row of pads in time with a given BPM.
+
+- [ ] **Interactive Finger Drumming Pad Trainer**  
+  Create an interactive pad trainer to help users practice finger drumming, with real-time feedback and customizable exercises.
+
+- [ ] **Custom Drum Pad Layout**  
+  Re-map pads to custom MIDI note triggers or DAW controls, with LED and screen feedback for each pad.
+
+- [ ] **Performance Mode**  
+  Animate pads with pulse/flashing color patterns and update display labels dynamically during performance.
+
+- [ ] **Live Parameter Visualizer**  
+  Show encoder or fader values visually on the screen — as bars, dials, or numbers — while they are being used.
+
+## Cross-platform
+This library works on **Windows**, **macOS**, and **Linux** without any external dependencies.
+
+## Installation
+Add this to your `Cargo.toml`:
+```toml
+[dependencies]
+launchkey-sdk = "0.1.0"
+```
+
+## Getting Started
+Example code:
+```rust
+use launchkey_sdk::launchkey::manager::LaunchkeyManager;
+use launchkey_sdk::launchkey::commands::LaunchkeyCommand;
+use launchkey_sdk::launchkey::colors::CommonColor;
+
+fn main() {
+    // Initialize Launchkey manager
+    let mut manager = LaunchkeyManager::default().unwrap();  
+    // Enter DAW mode
+    let mut manager = manager.into_daw_mode().unwrap();  
+    // Set pad colors
+    manager.send_command(LaunchkeyCommand::SetPadColor {
+        pad_in_mode: PadInMode::DAW(Pad::Mixer),
+        mode: LEDMode::Stationary,
+        color_palette_index: CommonColor::BrightGreen.into(),
+    }).unwrap();
+}
+```
+
+## API Highlights
+- `LaunchkeyManager`: Handles MIDI communication and device state
+- `Commands`: Type-safe API for all device operations (pads, displays, modes)
+- `Colors`: Both predefined palette indices and custom RGB values
+- `MIDI Handling`: Built-in utilities for control change, note on/off, SysEx messages
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+
+## ACKNOWLEDGMENTS
+- [midir](https://crates.io/crates/midir) - MIDI communication library for Rust, providing a simple interface for MIDI input and output.
+- [wmidi](https://crates.io/crates/wmidi) - A crate for handling MIDI messages in a platform-agnostic manner.
+- [image](https://crates.io/crates/image) - A library for image processing, including bitmap conversion and manipulation.
+- [strum](https://crates.io/crates/strum) - A set of utilities for working with enums in Rust, including deriving methods and iterators.
+
+## Contact
+
+- **Email**: [borna.cvitanic@gmail.com](mailto:borna.cvitanic@gmail.com)
+- **GitHub Issues**: [GitHub Issues Page](https://github.com/bornacvitanic/launchkey-sdk/issues)
