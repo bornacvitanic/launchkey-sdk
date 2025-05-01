@@ -1,5 +1,5 @@
 use crate::midi::to_hex::ToHexString;
-use midir::{MidiInput, MidiInputConnection};
+use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::io;
 use std::io::Write;
 use std::sync::mpsc;
@@ -60,6 +60,17 @@ pub fn connect_to_port(
         .map_err(|_| "Failed to connect to MIDI port".to_string())?;
 
     Ok(conn_in)
+}
+
+pub fn connect_all_midi_ports(
+    ports: &[(usize, String)],
+    tx: mpsc::Sender<Vec<u8>>
+) -> Vec<MidiInputConnection<()>> {
+    ports.iter().filter_map(|(i, name)| {
+        let mut midi_in = MidiInput::new(&format!("{} Listener", name)).ok()?;
+        midi_in.ignore(Ignore::None);
+        connect_to_port(midi_in, *i, tx.clone()).ok()
+    }).collect()
 }
 
 pub fn log_midi_message(message: MidiMessage) {

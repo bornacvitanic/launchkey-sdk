@@ -1,7 +1,7 @@
 use launchkey_sdk::launchkey::manager::{DAWMode, LaunchkeyManager};
 use launchkey_sdk::launchkey::surface::buttons::{ButtonState, LaunchKeyButton};
-use launchkey_sdk::midi::input::{connect_to_port, get_named_midi_ports};
-use midir::{Ignore, MidiInput};
+use launchkey_sdk::midi::input::{connect_all_midi_ports, get_named_midi_ports};
+use midir::{MidiInput};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -66,13 +66,7 @@ fn main() {
 
     let midi_in = MidiInput::new("MIDI Listener").unwrap();
     let ports = get_named_midi_ports(&midi_in);
-
-    let _connections: Vec<_> =
-        ports.iter().filter_map(|(i, name)| {
-            let mut midi_in = MidiInput::new(&format!("{} Listener", name)).ok()?;
-            midi_in.ignore(Ignore::None);
-            connect_to_port(midi_in, *i, tx.clone()).ok()
-        }).collect();
+    let _connections = connect_all_midi_ports(&ports, tx.clone());
 
     println!("Listening for MIDI messages...");
 
