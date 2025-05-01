@@ -52,6 +52,24 @@ It maps all known SysEx, CC, and control behavior as specified in the guide.
 
 ## Roadmap
 
+- [ ] **Launchkey MK4 Feature Control Support**  
+  Implement support for Launchkey MK4's full MIDI CC-based feature control system over DAW In port:
+  - [ ] Channel 7: Send control commands
+  - [ ] Channel 8: Send queries for current feature state
+  - [ ] Listen for reply messages on Channel 7 confirming state or response
+  - [ ] Implement control for major feature groups:
+    - [ ] Arp settings: Swing, Deviate, Ties, Accents, Ratchets, Type, Rate, Octave, Gate, Latch, etc.
+    - [ ] Scale and note layout: Behaviour, Root note, Mode, Shift toggle
+    - [ ] DAW interaction toggles: Performance Note Redirect, Touch Events, Encoder Relativity, Fader Pickup
+    - [x] Pad/Encoder/Fader layout selection
+    - [ ] Pad/Keybed velocity, aftertouch config, fixed velocity control
+    - [x] LED brightness
+    - [ ] Screen brightness and timeouts
+    - [ ] Chord Map settings and MIDI routing
+    - [ ] Arp connection and split zone selection
+    - [ ] Custom mode defaults and pick-up behaviors
+  - [ ] Expose a high-level `FeatureControl` API for reading/writing values by logical name
+
 - [ ] **Launchkey MK3 Support**  
   Add support for older MK3 devices with their unique SysEx and CC mappings.
 
