@@ -1,4 +1,5 @@
 # configuration for https://github.com/orhun/git-cliff
+# git-cliff -o CHANGELOG.md
 
 [changelog]
 # changelog header
