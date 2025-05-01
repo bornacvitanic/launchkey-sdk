@@ -16,22 +16,16 @@ use launchkey_sdk::midi::input;
 
 fn main() {
     // Set up LaunchkeyManager with default configuration
-    let launchkey_manager = match LaunchkeyManager::default() {
-        Ok(manager) => manager,
-        Err(err) => {
-            println!("Error setting up LaunchkeyManager: {}", err);
-            return;
-        }
-    };
+    let launchkey_manager = LaunchkeyManager::default().unwrap_or_else(|err| {
+        println!("Error setting up LaunchkeyManager: {}", err);
+        std::process::exit(1);
+    });
 
     // Set up DAW mode
-    let mut launchkey_manager = match launchkey_manager.into_daw_mode() {
-        Ok(daw_manager) => daw_manager,
-        Err(err) => {
-            println!("Error setting up DAW mode: {}", err);
-            return;
-        }
-    };
+    let mut launchkey_manager = launchkey_manager.into_daw_mode().unwrap_or_else(|err| {
+        println!("Error setting up DAW mode: {}", err);
+        std::process::exit(1);
+    });
 
     // Set custom DAW mode name
     launchkey_manager
