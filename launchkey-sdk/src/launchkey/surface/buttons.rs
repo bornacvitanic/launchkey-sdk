@@ -2,6 +2,7 @@ use crate::bidirectional_enum_mappings;
 use std::ops::Deref;
 use wmidi::ControlValue;
 
+/// Enumeration of all supported Launchkey buttons that can be programmatically controlled.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LaunchKeyButton {
     Shift,
@@ -43,7 +44,7 @@ bidirectional_enum_mappings!(LaunchKeyButton, u8, {
     Record => 0x75,
 });
 
-// Wrapper for Mini LaunchKey buttons, containing only the subset of buttons
+/// A wrapper for `LaunchKeyButton` limited to the subset of buttons available on the Launchkey Mini model.
 pub struct MiniLaunchKeyButton(pub LaunchKeyButton);
 
 impl MiniLaunchKeyButton {
@@ -59,6 +60,7 @@ impl MiniLaunchKeyButton {
         LaunchKeyButton::Function,
     ];
 
+    /// Converts a `LaunchKeyButton` to a `MiniLaunchKeyButton` if it is supported on the Mini model.
     pub fn from_launchkey_button(button: LaunchKeyButton) -> Option<Self> {
         if Self::SUPPORTED.contains(&button) {
             Some(MiniLaunchKeyButton(button))
@@ -76,7 +78,7 @@ impl Deref for MiniLaunchKeyButton {
     }
 }
 
-// Wrapper for Regular LaunchKey buttons, containing all buttons
+/// A wrapper for `LaunchKeyButton` representing buttons available on the full-size Launchkey model.
 pub struct RegularLaunchKeyButton(pub LaunchKeyButton);
 
 impl RegularLaunchKeyButton {
@@ -100,6 +102,7 @@ impl RegularLaunchKeyButton {
         LaunchKeyButton::Record,
     ];
 
+    /// Converts a `LaunchKeyButton` to a `RegularLaunchKeyButton` if it is supported on the regular model.
     pub fn from_launchkey_button(button: LaunchKeyButton) -> Option<Self> {
         if Self::SUPPORTED.contains(&button) {
             Some(RegularLaunchKeyButton(button))
@@ -117,6 +120,7 @@ impl Deref for RegularLaunchKeyButton {
     }
 }
 
+/// Represents the current state of a button — either pressed or released.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonState {
     Pressed,
@@ -135,6 +139,7 @@ impl TryFrom<ControlValue> for ButtonState {
     }
 }
 
+/// A strongly-typed wrapper around brightness values (0–127), used for setting LED brightness.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Brightness(u8);
 

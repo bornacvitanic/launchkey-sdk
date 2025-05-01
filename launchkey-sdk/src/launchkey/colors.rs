@@ -1,13 +1,15 @@
+/// A wrapper type representing a valid index (0–127) into the Launchkey's color palette.
+/// Used to assign predefined colors to pads and other elements.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ColorPaletteIndex(u8);
 
 impl ColorPaletteIndex {
-    /// Creates a new `PaletteIndex` with a value clamped to the range [0, 127].
+    /// Creates a new [`PaletteIndex`] with a value clamped to the range [0, 127].
     fn clamp_new(value: u8) -> Self {
         Self(value.min(127))
     }
 
-    /// Creates a new `ColorPaletteIndex` if the value is within the valid range [0, 127].
+    /// Creates a new [`ColorPaletteIndex`] if the value is within the valid range [0, 127].
     pub fn try_from(value: u8) -> Result<Self, String> {
         if value <= 127 {
             Ok(Self(value))
@@ -19,18 +21,14 @@ impl ColorPaletteIndex {
         }
     }
 
-    /// Converts the `ColorPaletteIndex` to its raw `u8` value.
+    /// Converts the [`ColorPaletteIndex`] to its raw `u8` value.
     pub fn as_u8(self) -> u8 {
         self.0
     }
 }
 
-impl From<CommonColor> for ColorPaletteIndex {
-    fn from(common_color: CommonColor) -> Self {
-        common_color.to_palette_index()
-    }
-}
-
+/// Represents an RGB color with component values limited to the range [0, 127].
+/// Used for setting custom colors on the Launchkey device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     pub r: u8,
@@ -39,7 +37,7 @@ pub struct Color {
 }
 
 impl Color {
-    /// Tries to create a new `Color` if all RGB values are within the valid range [0, 127].
+    /// Tries to create a new [`Color`] if all RGB values are within the valid range [0, 127].
     pub fn try_new(r: u8, g: u8, b: u8) -> Result<Self, String> {
         if r <= 127 && g <= 127 && b <= 127 {
             Ok(Self { r, g, b })
@@ -51,7 +49,7 @@ impl Color {
         }
     }
 
-    /// Creates a new `Color` with clamped values within the valid range [0, 127].
+    /// Creates a new [`Color`] with clamped values within the valid range [0, 127].
     /// This is useful for internal use where invalid values might slip through.
     pub(crate) fn clamp_new(r: u8, g: u8, b: u8) -> Self {
         Self {
@@ -61,7 +59,7 @@ impl Color {
         }
     }
 
-    /// Creates a new `Color` by converting RGB values from the full range [0, 255] to [0, 127].
+    /// Creates a new [`Color`] by converting RGB values from the full range [0, 255] to [0, 127].
     /// Automatically scales down the values.
     pub fn from_full_range(r: u8, g: u8, b: u8) -> Self {
         Self {
@@ -71,12 +69,12 @@ impl Color {
         }
     }
 
-    /// Creates a new `Color` by converting RGB values from the color palette range [97, 255] to [0, 127].
+    /// Creates a new [`Color`] by converting RGB values from the color palette range [97, 255] to [0, 127].
     pub fn from_color_palette_range(r: u8, g: u8, b: u8) -> Self {
         Self::map_rgb(r, g, b, 97, 255)
     }
 
-    /// Creates a new `Color` by converting RGB values from the specified input range to [0, 127].
+    /// Creates a new [`Color`] by converting RGB values from the specified input range to [0, 127].
     pub fn map_rgb(r: u8, g: u8, b: u8, in_min: u8, in_max: u8) -> Self {
         let out_min = 0;
         let out_max = 127;
@@ -94,12 +92,8 @@ impl Color {
     }
 }
 
-impl From<CommonColor> for Color {
-    fn from(common_color: CommonColor) -> Self {
-        common_color.to_color()
-    }
-}
-
+/// Enum representing a set of common named colors supported by the Launchkey palette.
+/// These are mapped to fixed RGB values and palette indices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CommonColor {
     Off,
@@ -133,7 +127,7 @@ pub enum CommonColor {
 }
 
 impl CommonColor {
-    /// Converts the `CommonColor` to a `ColorPaletteIndex`.
+    /// Converts the [`CommonColor`] to a [`ColorPaletteIndex`].
     pub fn to_palette_index(self) -> ColorPaletteIndex {
         let index = match self {
             CommonColor::Off => 0x00,
@@ -168,7 +162,7 @@ impl CommonColor {
         ColorPaletteIndex::clamp_new(index)
     }
 
-    /// Converts the `CommonColor` to a `Color`.
+    /// Converts the [`CommonColor`] to a [`Color`].
     pub fn to_color(self) -> Color {
         match self {
             CommonColor::Off => Color::from_color_palette_range(97, 97, 97),
@@ -200,5 +194,17 @@ impl CommonColor {
             CommonColor::NormalPink => Color::from_color_palette_range(221, 97, 221),
             CommonColor::BrightPink => Color::from_color_palette_range(255, 97, 255),
         }
+    }
+}
+
+impl Into<ColorPaletteIndex> for CommonColor {
+    fn into(self) -> ColorPaletteIndex {
+        self.to_palette_index()
+    }
+}
+
+impl Into<Color> for CommonColor {
+    fn into(self) -> Color {
+        self.to_color()
     }
 }

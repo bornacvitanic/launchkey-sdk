@@ -10,15 +10,21 @@ use std::any::TypeId;
 use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
+use crate::midi::to_hex::ToHexString;
 
+/// Marker trait for state-dependent behavior in [`LaunchkeyManager`].
 pub trait LaunchKeyState {}
 
+/// Marker type representing the Launchkey being in DAW mode.
 pub struct DAWMode;
 impl LaunchKeyState for DAWMode {}
 
+/// Marker type representing the Launchkey being in standalone mode.
 pub struct StandaloneMode;
 impl LaunchKeyState for StandaloneMode {}
 
+/// A stateful manager for sending MIDI commands to a Launchkey device.
+/// It is generic over a state (['DAWMode'] or ['StandaloneMode']) to enforce correct usage.
 pub struct LaunchkeyManager<S: LaunchKeyState + 'static> {
     conn_out: Rc<RefCell<midir::MidiOutputConnection>>,
     sku: LaunchKeySku,
@@ -62,7 +68,7 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
 }
 
 impl LaunchkeyManager<StandaloneMode> {
-    /// Creates a new LaunchkeyManager and connects to the specified output port.
+    /// Creates a new ['LaunchkeyManager'] and connects to the specified output port.
     pub fn new(
         midi_out: MidiOutput,
         port: &MidiOutputPort,
@@ -78,7 +84,7 @@ impl LaunchkeyManager<StandaloneMode> {
         })
     }
 
-    /// Provides a default LaunchkeyManager instance.
+    /// Provides a default ['LaunchkeyManager'] instance.
     pub fn default() -> Result<Self, String> {
         // Create MIDI output instance
         let midi_out = MidiOutput::new("Custom DAW")
@@ -103,7 +109,7 @@ impl LaunchkeyManager<StandaloneMode> {
         Self::new(midi_out, out_port, LaunchKeySku::Mini)
     }
 
-    /// Sends a command to set the global screen text in Standalone Mode.
+    /// Sends a command to set the global screen text in ['StandaloneMode'].
     pub fn set_screen_text_global(
         &mut self,
         target: GlobalDisplayTarget,
@@ -115,7 +121,7 @@ impl LaunchkeyManager<StandaloneMode> {
         })
     }
 
-    /// Sends a command to display a screen bitmap in Standalone Mode.
+    /// Sends a command to display a screen bitmap in ['StandaloneMode'].
     pub fn send_screen_bitmap(
         &mut self,
         target: GlobalDisplayTarget,
@@ -127,7 +133,7 @@ impl LaunchkeyManager<StandaloneMode> {
         })
     }
 
-    /// Enables DAW Mode and transitions the manager to DAW mode.
+    /// Enables DAW Mode and transitions the manager to ['DAWMode'].
     pub fn into_daw_mode(mut self) -> Result<LaunchkeyManager<DAWMode>, midir::SendError> {
         self._enable_daw_mode()?;
         Ok(LaunchkeyManager {
@@ -139,7 +145,7 @@ impl LaunchkeyManager<StandaloneMode> {
 }
 
 impl LaunchkeyManager<DAWMode> {
-    /// Disables DAW Mode and transitions the manager to Standalone mode.
+    /// Disables DAW Mode and transitions the manager to ['StandaloneMode'].
     pub fn into_standalone_mode(
         mut self,
     ) -> Result<LaunchkeyManager<StandaloneMode>, midir::SendError> {

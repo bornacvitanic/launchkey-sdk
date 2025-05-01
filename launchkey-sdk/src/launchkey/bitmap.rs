@@ -5,12 +5,12 @@ use image::DynamicImage;
 pub struct LaunchkeyBitmap([u8; 1216]);
 
 impl LaunchkeyBitmap {
-    /// Creates a new bitmap from raw data (must be exactly 1216 bytes)
+    /// Creates a new bitmap from a 1216-byte array, where each byte encodes pixels in a specific format.
     pub fn new(data: [u8; 1216]) -> Self {
         Self(data)
     }
 
-    /// Converts an image to Launchkey's 128x64 monochrome format
+    /// Converts a full image to a Launchkey-compatible 128x64 monochrome bitmap using a brightness threshold.
     pub fn from_image(img: DynamicImage, threshold: u8) -> Result<Self, String> {
         const DISPLAY_WIDTH: u32 = 128;
         const DISPLAY_HEIGHT: u32 = 64;

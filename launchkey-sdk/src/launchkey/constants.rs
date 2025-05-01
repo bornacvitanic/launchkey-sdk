@@ -17,6 +17,7 @@ pub const CONFIGURE_DISPLAY_COMMAND: u8 = 0x04;
 pub const SET_SCREEN_TEXT_COMMAND: u8 = 0x06;
 pub const BITMAP_HEADER_BYTE: u8 = 0x09;
 
+/// Represents different hardware SKUs (models) for Launchkey devices.
 #[derive(Debug, Clone)]
 pub enum LaunchKeySku {
     Regular,
@@ -24,6 +25,7 @@ pub enum LaunchKeySku {
 }
 
 impl LaunchKeySku {
+    /// Returns the SysEx header required for communication with this SKU.
     pub fn sys_ex_header(&self) -> [u8; 6] {
         let model_identifier = match self {
             LaunchKeySku::Regular => 0x14,

@@ -15,6 +15,8 @@ use crate::launchkey::surface::display::{
 use crate::launchkey::surface::pads::{LEDMode, PadInMode};
 use std::ops::Deref;
 
+/// Represents a high-level Launchkey command that can be converted into a MIDI message.
+/// These are used to control pads, buttons, displays, and other device features.
 #[derive(Debug, Clone)]
 pub enum LaunchkeyCommand {
     SetDrumDAWMode(bool),
@@ -49,6 +51,7 @@ pub enum LaunchkeyCommand {
 }
 
 impl LaunchkeyCommand {
+    /// Converts the [`LaunchkeyCommand`] into a MIDI byte sequence appropriate for the specific SKU.
     pub(crate) fn as_bytes(&self, sku: &LaunchKeySku) -> Vec<u8> {
         let header = sku.sys_ex_header();
         match self {
@@ -193,6 +196,8 @@ impl LaunchkeyCommand {
             }
         }
     }
+
+    /// Internal helper to create a SysEx message configuring the screen for a target and config.
     fn configure_display(
         &self,
         target: DisplayTarget,
@@ -209,6 +214,7 @@ impl LaunchkeyCommand {
         data
     }
 
+    /// Internal helper to create a SysEx message that sets text on a specific display field.
     fn set_screen_text(
         &self,
         target: DisplayTarget,
