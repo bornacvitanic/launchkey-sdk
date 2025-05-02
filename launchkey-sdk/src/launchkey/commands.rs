@@ -96,9 +96,9 @@ impl LaunchkeyCommand {
                     CUSTOM_COLOR_COMMAND.0,
                     CUSTOM_COLOR_COMMAND.1,
                     (*pad_in_mode).to_index(),
-                    color.r,
-                    color.g,
-                    color.b,
+                    color.r.into(),
+                    color.g.into(),
+                    color.b.into(),
                 ]);
                 data.push(SYSEX_TERMINATOR);
                 data

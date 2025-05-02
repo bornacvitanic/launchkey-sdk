@@ -1,29 +1,29 @@
+use wmidi::U7;
+
 /// A wrapper type representing a valid index (0–127) into the Launchkey's color palette.
 /// Used to assign predefined colors to pads and other elements.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ColorPaletteIndex(u8);
+pub struct ColorPaletteIndex(U7);
 
 impl ColorPaletteIndex {
     /// Creates a new [`PaletteIndex`] with a value clamped to the range [0, 127].
     fn clamp_new(value: u8) -> Self {
-        Self(value.min(127))
+        Self(U7::clamp_new(value))
     }
 
     /// Creates a new [`ColorPaletteIndex`] if the value is within the valid range [0, 127].
     pub fn try_from(value: u8) -> Result<Self, String> {
-        if value <= 127 {
-            Ok(Self(value))
-        } else {
-            Err(format!(
+        U7::try_from(value).map(Self).map_err(|_| {
+            format!(
                 "Invalid color index: {}. Must be between 0 and 127.",
                 value
-            ))
-        }
+            )
+        })
     }
 
     /// Converts the [`ColorPaletteIndex`] to its raw `u8` value.
     pub fn as_u8(self) -> u8 {
-        self.0
+        self.0.into()
     }
 }
 
@@ -31,31 +31,27 @@ impl ColorPaletteIndex {
 /// Used for setting custom colors on the Launchkey device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+    pub r: U7,
+    pub g: U7,
+    pub b: U7,
 }
 
 impl Color {
     /// Tries to create a new [`Color`] if all RGB values are within the valid range [0, 127].
     pub fn try_new(r: u8, g: u8, b: u8) -> Result<Self, String> {
-        if r <= 127 && g <= 127 && b <= 127 {
-            Ok(Self { r, g, b })
-        } else {
-            Err(format!(
-                "Invalid RGB value: R={}, G={}, B={}. All values must be between 0 and 127.",
-                r, g, b
-            ))
-        }
+        let r = U7::try_from(r).map_err(|_| format!("Invalid R value: {}. Must be between 0 and 127.", r))?;
+        let g = U7::try_from(g).map_err(|_| format!("Invalid G value: {}. Must be between 0 and 127.", g))?;
+        let b = U7::try_from(b).map_err(|_| format!("Invalid B value: {}. Must be between 0 and 127.", b))?;
+        Ok(Self { r, g, b })
     }
 
     /// Creates a new [`Color`] with clamped values within the valid range [0, 127].
     /// This is useful for internal use where invalid values might slip through.
     pub(crate) fn clamp_new(r: u8, g: u8, b: u8) -> Self {
         Self {
-            r: r.min(127),
-            g: g.min(127),
-            b: b.min(127),
+            r: U7::clamp_new(r),
+            g: U7::clamp_new(g),
+            b: U7::clamp_new(b),
         }
     }
 
@@ -63,25 +59,28 @@ impl Color {
     /// Automatically scales down the values.
     pub fn from_full_range(r: u8, g: u8, b: u8) -> Self {
         Self {
-            r: (r as f32 * 127.0 / 255.0) as u8,
-            g: (g as f32 * 127.0 / 255.0) as u8,
-            b: (b as f32 * 127.0 / 255.0) as u8,
+            r: U7::from_u8_lossy((r as f32 * 127.0 / 255.0) as u8),
+            g: U7::from_u8_lossy((g as f32 * 127.0 / 255.0) as u8),
+            b: U7::from_u8_lossy((b as f32 * 127.0 / 255.0) as u8),
         }
     }
 
     /// Creates a new [`Color`] by converting RGB values from the color palette range [97, 255] to [0, 127].
+    /// Ensures input values are at least 97, but doesn't clamp the upper bound.
     pub fn from_color_palette_range(r: u8, g: u8, b: u8) -> Self {
-        Self::map_rgb(r, g, b, 97, 255)
+        Self::map_rgb(r.max(97), g.max(97), b.max(97), 97, 255)
     }
 
     /// Creates a new [`Color`] by converting RGB values from the specified input range to [0, 127].
     pub fn map_rgb(r: u8, g: u8, b: u8, in_min: u8, in_max: u8) -> Self {
         let out_min = 0;
         let out_max = 127;
-        let map_value = |value: u8| -> u8 {
-            ((value as f32 - in_min as f32) / (in_max as f32 - in_min as f32)
+
+        let map_value = |value: u8| -> U7 {
+            let mapped = ((value as f32 - in_min as f32) / (in_max as f32 - in_min as f32)
                 * (out_max as f32 - out_min as f32)
-                + out_min as f32) as u8
+                + out_min as f32) as u8;
+            U7::from_u8_lossy(mapped)
         };
 
         Self {
@@ -206,5 +205,17 @@ impl Into<ColorPaletteIndex> for CommonColor {
 impl Into<Color> for CommonColor {
     fn into(self) -> Color {
         self.to_color()
+    }
+}
+
+// Trait to add the `clamp_new` functionality to U7
+pub trait U7Ext {
+    fn clamp_new(value: u8) -> U7;
+}
+
+impl U7Ext for U7 {
+    fn clamp_new(value: u8) -> U7 {
+        // Clamp the value to the range [0, 127]
+        U7::from_u8_lossy(value.min(U7::MAX.into()))
     }
 }
