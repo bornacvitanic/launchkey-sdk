@@ -1,9 +1,10 @@
-// Macro for single bidirectional mappings.
+/// Defines bidirectional mapping methods for an enum, allowing conversion between
+/// enum variants and corresponding values.
 #[macro_export]
 macro_rules! bidirectional_enum_mappings {
     ($name:ident, $type:ty, { $($variant:ident => $value:expr),* $(,)? }) => {
         impl $name {
-            // Generates O(1) lookup for single mapping
+            /// Returns the associated value for the enum variant.
             pub fn to_value(&self) -> $type {
                 match self {
                     $(
@@ -12,7 +13,7 @@ macro_rules! bidirectional_enum_mappings {
                 }
             }
 
-            // Reverse lookup for single mapping (value -> enum variant)
+            /// Returns the enum variant corresponding to the value, or `None` if invalid.
             pub fn from_value(value: $type) -> Option<$name> {
                 match value {
                     $(
@@ -25,7 +26,9 @@ macro_rules! bidirectional_enum_mappings {
     };
 }
 
-// Macro for bidirectional mappings with a custom Mode enum.
+/// Defines bidirectional mapping methods for an enum with a custom mode.
+/// This macro generates methods for converting between enum variants and values
+/// for each specified mode.
 #[macro_export]
 macro_rules! bidirectional_enum_mappings_with_mode {
     // With custom mode enum name (mode is required)
@@ -37,7 +40,7 @@ macro_rules! bidirectional_enum_mappings_with_mode {
         }
 
         impl $name {
-            // Generates O(1) lookup for each mode
+            /// Converts the enum variant to its associated value based on the given mode.
             pub fn to_value_mode(&self, mode: $mode_name) -> $type {
                 match mode {
                     $(
@@ -50,7 +53,7 @@ macro_rules! bidirectional_enum_mappings_with_mode {
                 }
             }
 
-            // Reverse lookup for each mode (value -> enum variant)
+            /// Converts a value back to its corresponding enum variant based on the mode.
             pub fn from_value_mode(value: $type, mode: $mode_name) -> Option<$name> {
                 match mode {
                     $(
@@ -64,6 +67,7 @@ macro_rules! bidirectional_enum_mappings_with_mode {
                 }
             }
 
+            /// Returns the enum variant and its associated mode from a given value.
             pub fn from_value(value: $type) -> Option<($name, $mode_name)> {
                 match value {
                     $(
@@ -76,11 +80,14 @@ macro_rules! bidirectional_enum_mappings_with_mode {
     };
 }
 
+/// Defines bidirectional mapping methods for an enum with an existing mode.
+/// This macro generates methods for converting between enum variants and values
+/// for each specified mode using an already defined mode enum.
 #[macro_export]
 macro_rules! bidirectional_enum_mappings_with_existing_mode {
     ($name:ident, $type:ty, $mode_name:ident, { $($mode:ident => { $($variant:ident => $value:expr),* $(,)? }),* $(,)? }) => {
         impl $name {
-            // Maps enum variant to value based on mode
+            /// Converts the enum variant to its associated value based on the given mode.
             pub fn to_value_mode(&self, mode: $mode_name) -> $type {
                 match mode {
                     $(
@@ -93,7 +100,7 @@ macro_rules! bidirectional_enum_mappings_with_existing_mode {
                 }
             }
 
-            // Maps value back to enum variant based on mode
+            /// Converts a value back to its corresponding enum variant based on the mode.
             pub fn from_value_mode(value: $type, mode: $mode_name) -> Option<$name> {
                 match mode {
                     $(
@@ -107,7 +114,7 @@ macro_rules! bidirectional_enum_mappings_with_existing_mode {
                 }
             }
 
-            // Find enum variant and its mode from a value
+            /// Returns the enum variant and its associated mode from a given value.
             pub fn from_value(value: $type) -> Option<($name, $mode_name)> {
                 match value {
                     $(
