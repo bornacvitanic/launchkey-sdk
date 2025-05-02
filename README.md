@@ -224,6 +224,17 @@ fn main() {
 - `Colors`: Both predefined palette indices and custom RGB values
 - `MIDI Handling`: Built-in utilities for control change, note on/off, SysEx messages
 
+## Example Applications
+
+This repository includes additional tools built on top of the SDK, located in the [`/apps`](./apps) directory:
+
+| Name                             | Description                                                                                       |
+|----------------------------------|---------------------------------------------------------------------------------------------------|
+| [`midi-debugger`](./apps/midi-debugger)           | A real-time MIDI event logger to inspect and debug Launchkey messages.                            |
+| [`melodics-companion`](./apps/melodics-companion) | A helper tool to augment Melodics training sessions with additional controls and visual feedback. |
+
+Each tool can be run independently and includes its own README for usage and setup instructions.
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
@@ -232,7 +243,7 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
 
-## ACKNOWLEDGMENTS
+## Acknowledgments
 - [midir](https://crates.io/crates/midir) - MIDI communication library for Rust, providing a simple interface for MIDI input and output.
 - [wmidi](https://crates.io/crates/wmidi) - A crate for handling MIDI messages in a platform-agnostic manner.
 - [image](https://crates.io/crates/image) - A library for image processing, including bitmap conversion and manipulation.
