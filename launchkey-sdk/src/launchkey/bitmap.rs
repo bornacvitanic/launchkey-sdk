@@ -11,7 +11,7 @@ impl LaunchkeyBitmap {
     }
 
     /// Converts a full image to a Launchkey-compatible 128x64 monochrome bitmap using a brightness threshold.
-    pub fn from_image(img: DynamicImage, threshold: u8) -> Result<Self, String> {
+    pub fn from_image(img: DynamicImage, threshold: u8) -> Self {
         const DISPLAY_WIDTH: u32 = 128;
         const DISPLAY_HEIGHT: u32 = 64;
         const BYTES_PER_ROW: u32 = 19;
@@ -32,7 +32,7 @@ impl LaunchkeyBitmap {
             }
         }
 
-        Ok(Self(data))
+        Self(data)
     }
 }
 

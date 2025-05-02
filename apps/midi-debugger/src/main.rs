@@ -115,7 +115,7 @@ fn main() {
 
     // Send a bitmap to the screen
     let img = image::open("logo.png").map_err(|e| e.to_string()).unwrap();
-    let bitmap = LaunchkeyBitmap::from_image(img, 128).unwrap();
+    let bitmap = LaunchkeyBitmap::from_image(img, 128);
     launchkey_manager
         .send_command(LaunchkeyCommand::SendScreenBitmap {
             target: GlobalDisplayTarget::Temporary,

@@ -57,6 +57,7 @@ It maps all known SysEx, CC, and control behavior as documented in that guide.
 ---
 
 ## Roadmap
+- [ ] Auto detect Launchkey SKU
 
 - [ ] **Launchkey MK4 Feature Control Support**  
   Implement support for Launchkey MK4's full MIDI CC-based feature control system over DAW In port:
@@ -75,6 +76,9 @@ It maps all known SysEx, CC, and control behavior as documented in that guide.
     - [ ] Arp connection and split zone selection
     - [ ] Custom mode defaults and pick-up behaviors
   - [ ] Expose a high-level `FeatureControl` API for reading/writing values by logical name
+
+- [ ] **Auto Hotplug Detection**  
+  Automatically reconnect or react to device plug/unplug events on supported platforms.
 
 - [ ] **Launchkey MK3 Support**  
   Add support for older MK3 devices with their unique SysEx and CC mappings.
@@ -104,9 +108,6 @@ It maps all known SysEx, CC, and control behavior as documented in that guide.
 
 - [ ] **CLI Tool (`launchkey-cli`)**  
   A separate command-line interface for sending test commands, bitmaps, display updates, etc.
-
-- [ ] **Auto Hotplug Detection**  
-  Automatically reconnect or react to device plug/unplug events on supported platforms.
 
 ### Example Gallery
 
@@ -248,6 +249,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 - [wmidi](https://crates.io/crates/wmidi) - A crate for handling MIDI messages in a platform-agnostic manner.
 - [image](https://crates.io/crates/image) - A library for image processing, including bitmap conversion and manipulation.
 - [strum](https://crates.io/crates/strum) - A set of utilities for working with enums in Rust, including deriving methods and iterators.
+- [thiserror](https://crates.io/crates/thiserror) - A convenient and ergonomic error handling library for Rust, enabling easy creation of custom error types with automatic `From` implementations.
 
 ## Contact
 
