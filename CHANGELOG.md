@@ -2,6 +2,72 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2025-05-03
+
+### Documentation
+
+- Update macros.rs to give better docstrings to macros
+
+
+### Updates
+
+- Update launchkey-sdk Cargo.toml to 0.1.4
+
+- Update colors.rs to make ColorPaletteIndex and Color utilise U7 instead of manually doing same clamping
+
+- Update bitmap.rs to extract constants to avoid repetition
+
+
+## [0.1.3] - 2025-05-02
+
+### Documentation
+
+- Add README.md for apps
+
+- Update README.md to add docs badge
+
+
+### Features
+
+- Add error.rs to implement better error handling
+
+
+## [0.1.2] - 2025-05-01
+
+### Documentation
+
+- Update README.md to add disclaimer about the SDK not being affiliated with Novation
+
+- Update README.md to add Launchkey Banner
+
+- Update README.md to add FEature Control Support on to the Roadmap
+
+
+### Updates
+
+- Update Cargo.toml to 0.1.2
+
+
+## [0.1.1] - 2025-05-01
+
+### Documentation
+
+- Update README.md to update code examples
+
+- Update Cargo.toml to specify correct LICSENSE.md and README.md locations
+
+- Fix dependency status in README.md
+
+
+### Updates
+
+- Update Cargo.toml for the launchkey-sdk to 0.1.1
+
+- Update rust.yml github action
+
+- Update rust.yml github action
+
+
 ## [0.1.0] - 2025-05-01
 
 ### Bug Fixes
@@ -12,6 +78,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Add CHANGELOG.md
 
 - Add README.md
 
@@ -156,3 +224,5 @@ This reverts commit de1b4a41ed5ea739eecd565c2e89eee05acb3aee.
 - Update commands to support setting of both DAW pad mode and Drum pad mode pad colors
 
 - Update commands to extend PadModes, EncoderModes and FaderModes
+
+
