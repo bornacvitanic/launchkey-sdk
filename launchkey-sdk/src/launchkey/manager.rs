@@ -10,6 +10,7 @@ use std::any::TypeId;
 use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
+use log::{debug, error, info, log};
 use crate::launchkey::error::{LaunchkeyError, LaunchkeyInitError, MidiSendError};
 use crate::midi::to_hex::ToHexString;
 
@@ -33,18 +34,6 @@ pub struct LaunchkeyManager<S: LaunchKeyState + 'static> {
 }
 
 impl<S: LaunchKeyState> LaunchkeyManager<S> {
-    /// Enables DAW mode on the Launchkey device by sending a MIDI message.
-    fn _enable_daw_mode(&mut self) -> Result<(), MidiSendError> {
-        println!("Enabling DAW Mode");
-        self._send_bytes(&ENABLE_DAW_MODE)
-    }
-
-    /// Disables DAW mode on the Launchkey device by sending a MIDI message.
-    fn _disable_daw_mode(&mut self) -> Result<(), MidiSendError> {
-        println!("Disabling DAW Mode");
-        self._send_bytes(&DISABLE_DAW_MODE)
-    }
-
     /// Sends a MIDI command to the Launchkey.
     fn _send_command(&mut self, command: LaunchkeyCommand) -> Result<(), MidiSendError> {
         match command {
@@ -62,7 +51,7 @@ impl<S: LaunchKeyState> LaunchkeyManager<S> {
 
     /// Sends raw byte command to the Launchkey.
     fn _send_bytes(&mut self, bytes: &[u8]) -> Result<(), MidiSendError> {
-        println!("Sending MIDI message: {}", &bytes.to_hex_string());
+        debug!("Sending MIDI message: {}", &bytes.to_hex_string());
         self.conn_out.borrow_mut().send(bytes)?;
         Ok(())
     }
@@ -96,6 +85,7 @@ impl LaunchkeyManager<StandaloneMode> {
         }
 
         // Find the desired output port (e.g., "MIDIOUT2")
+        info!("Looking for 'MIDIOUT2' among available MIDI ports...");
         let out_port = ports
             .iter()
             .find(|port| {
@@ -135,7 +125,8 @@ impl LaunchkeyManager<StandaloneMode> {
 
     /// Enables DAW Mode and transitions the manager to ['DAWMode'].
     pub fn into_daw_mode(mut self) -> Result<LaunchkeyManager<DAWMode>, LaunchkeyError> {
-        self._enable_daw_mode()?;
+        self._send_bytes(&ENABLE_DAW_MODE)?;
+        info!("Transitioned to DAW mode");
         Ok(LaunchkeyManager {
             conn_out: self.conn_out.clone(),
             sku: self.sku.clone(),
@@ -149,7 +140,8 @@ impl LaunchkeyManager<DAWMode> {
     pub fn into_standalone_mode(
         mut self,
     ) -> Result<LaunchkeyManager<StandaloneMode>, LaunchkeyError> {
-        self._disable_daw_mode()?;
+        self._send_bytes(&DISABLE_DAW_MODE)?;
+        info!("Transitioned to Standalone mode");
         Ok(LaunchkeyManager {
             conn_out: self.conn_out.clone(),
             sku: self.sku.clone(),
@@ -168,11 +160,13 @@ impl LaunchkeyManager<DAWMode> {
 
     /// Sends a MIDI command to the Launchkey.
     pub fn send_command(&mut self, command: LaunchkeyCommand) -> Result<(), MidiSendError> {
+        debug!("Dispatching command: {:?}", command);
         self._send_command(command)
     }
 
     /// Sends multiple MIDI commands to the Launchkey.
     pub fn send_commands(&mut self, commands: &[LaunchkeyCommand]) -> Result<(), MidiSendError> {
+        debug!("Sending {} MIDI commands to Launchkey", commands.len());
         for command in commands {
             self._send_command((*command).clone())?;
         }
@@ -184,8 +178,8 @@ impl<S: LaunchKeyState + 'static> Drop for LaunchkeyManager<S> {
     fn drop(&mut self) {
         // Check if the current type is DawMode
         if TypeId::of::<S>() == TypeId::of::<DAWMode>() {
-            if let Err(err) = self._disable_daw_mode() {
-                eprintln!("Failed to disable DAW mode during cleanup: {}", err);
+            if let Err(err) = self._send_bytes(&DISABLE_DAW_MODE) {
+                error!("Failed to disable DAW mode during cleanup: {}", err);
             }
         }
     }

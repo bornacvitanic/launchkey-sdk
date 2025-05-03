@@ -250,6 +250,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 - [image](https://crates.io/crates/image) - A library for image processing, including bitmap conversion and manipulation.
 - [strum](https://crates.io/crates/strum) - A set of utilities for working with enums in Rust, including deriving methods and iterators.
 - [thiserror](https://crates.io/crates/thiserror) - A convenient and ergonomic error handling library for Rust, enabling easy creation of custom error types with automatic `From` implementations.
+- [log](https://crates.io/crates/log) - A lightweight and flexible logging facade for Rust libraries and applications, supporting pluggable backends for structured and leveled logging.
 
 ## Contact
 

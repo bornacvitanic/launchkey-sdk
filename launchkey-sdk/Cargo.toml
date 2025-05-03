@@ -1,6 +1,6 @@
 [package]
 name = "launchkey-sdk"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Borna Cvitanić borna.cvitanic@gmail.com"]
 description = "A type-safe Rust SDK for Novation Launchkey MIDI controllers. Enables full control over pads, encoders, faders, displays, and DAW integration with support for RGB colors, bitmaps, and cross-platform development."
 repository = "https://github.com/bornacvitanic/launchkey-sdk"
@@ -20,3 +20,4 @@ strum = "0.27.1"
 strum_macros = "0.27.1"
 image = "0.25.5"
 thiserror = "2.0.12"
+log = "0.4.27"
